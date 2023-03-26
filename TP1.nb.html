@@ -2022,10 +2022,230 @@ pval  0.5711401 0.4010784 0.2758570 0.97410364  0.89916415 0.9824864146</code></
 <!-- rnb-text-begin -->
 <p>On ne rejette pas que coefficient <span class="math inline">\(\phi_p\)</span> et <span class="math inline">\(\psi_q\)</span> sont non nuls.</p>
 <!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxueSA9IGRlc2Fpc29uIC0gbWVhbihkZXNhaXNvbilcblxuYXJpbWFmaXQgPC0gZnVuY3Rpb24oZXN0aW0pe1xuICBhZGp1c3QgPC0gcm91bmQoc2lnbmlmKGVzdGltKSwzKVxuICBwdmFscyA8LSBRdGVzdHMoZXN0aW0kcmVzaWR1YWxzLDI0LGxlbmd0aChlc3RpbSRjb2VmKS0xKVxuICBwdmFscyA8LSBtYXRyaXgoYXBwbHkobWF0cml4KDE6MjQsbnJvdz02KSwyLGZ1bmN0aW9uKGMpIHJvdW5kKHB2YWxzW2MsXSwzKSksbnJvdz02KVxuICBjb2xuYW1lcyhwdmFscykgPC0gcmVwKGMoXCJsYWdcIiwgXCJwdmFsXCIpLDQpXG4gIGNhdChcInRlc3RzIGRlIG51bGxpdGUgZGVzIGNvZWZmaWNpZW50cyA6XFxuXCIpXG4gIHByaW50KGFkanVzdClcbiAgY2F0KFwiXFxuIHRlc3RzIGQnYWJzZW5jZSBkJ2F1dG9jb3JyZWxhdGlvbiBkZXMgcmVzaWR1cyA6IFxcblwiKVxuICBwcmludChwdmFscylcbn1cblxuZXN0aW0gPC0gYXJpbWEoeSxjKDEsMCwwKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code>y = desaison - mean(desaison)
+
+arimafit &lt;- function(estim){
+  adjust &lt;- round(signif(estim),3)
+  pvals &lt;- Qtests(estim$residuals,24,length(estim$coef)-1)
+  pvals &lt;- matrix(apply(matrix(1:24,nrow=6),2,function(c) round(pvals[c,],3)),nrow=6)
+  colnames(pvals) &lt;- rep(c(&quot;lag&quot;, &quot;pval&quot;),4)
+  cat(&quot;tests de nullite des coefficients :\n&quot;)
+  print(adjust)
+  cat(&quot;\n tests d&#39;absence d&#39;autocorrelation des residus : \n&quot;)
+  print(pvals)
+}
+
+estim &lt;- arima(y,c(1,0,0)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgYXIxIGludGVyY2VwdFxuY29lZiAtMC4zMDkgICAgLTAuMDAyXG5zZSAgICAwLjA3MSAgICAgMC4wMjdcbnB2YWwgIDAuMDAwICAgICAwLjk1NVxuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuMDgyICAxMyAwLjIwOSAgMTkgMC4yMDVcblsyLF0gICAyIDAuMDE2ICAgOCAwLjEwOSAgMTQgMC4yMjQgIDIwIDAuMjUyXG5bMyxdICAgMyAwLjAxNSAgIDkgMC4wNzcgIDE1IDAuMjAzICAyMSAwLjE4NFxuWzQsXSAgIDQgMC4wMzkgIDEwIDAuMDkzICAxNiAwLjIzNSAgMjIgMC4xNTlcbls1LF0gICA1IDAuMDY0ICAxMSAwLjEyNyAgMTcgMC4xMjggIDIzIDAuMTgyXG5bNixdICAgNiAwLjA5NiAgMTIgMC4xNjggIDE4IDAuMTY2ICAyNCAwLjE3MVxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ar1 intercept
+coef -0.309    -0.002
+se    0.071     0.027
+pval  0.000     0.955
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.082  13 0.209  19 0.205
+[2,]   2 0.016   8 0.109  14 0.224  20 0.252
+[3,]   3 0.015   9 0.077  15 0.203  21 0.184
+[4,]   4 0.039  10 0.093  16 0.235  22 0.159
+[5,]   5 0.064  11 0.127  17 0.128  23 0.182
+[6,]   6 0.096  12 0.168  18 0.166  24 0.171</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuZXN0aW0gPC0gYXJpbWEoeSxjKDIsMCwwKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code># 
+
+estim &lt;- arima(y,c(2,0,0)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgYXIxICAgYXIyIGludGVyY2VwdFxuY29lZiAtMC4yNjcgMC4xMzMgICAgLTAuMDAxXG5zZSAgICAwLjA3NCAwLjA3MyAgICAgMC4wMzFcbnB2YWwgIDAuMDAwIDAuMDcxICAgICAwLjk4NVxuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuMjMwICAxMyAwLjQ2OSAgMTkgMC4zOTNcblsyLF0gICAyICAgIE5BICAgOCAwLjI5NSAgMTQgMC40ODEgIDIwIDAuNDQ0XG5bMyxdICAgMyAwLjA0MSAgIDkgMC4yMzEgIDE1IDAuNDc3ICAyMSAwLjM0M1xuWzQsXSAgIDQgMC4xMTYgIDEwIDAuMjQ2ICAxNiAwLjQ4NSAgMjIgMC4zMjlcbls1LF0gICA1IDAuMTcwICAxMSAwLjMxNCAgMTcgMC4yODEgIDIzIDAuMzcwXG5bNixdICAgNiAwLjI0NyAgMTIgMC4zOTYgIDE4IDAuMzQ0ICAyNCAwLjM2M1xuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ar1   ar2 intercept
+coef -0.267 0.133    -0.001
+se    0.074 0.073     0.031
+pval  0.000 0.071     0.985
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.230  13 0.469  19 0.393
+[2,]   2    NA   8 0.295  14 0.481  20 0.444
+[3,]   3 0.041   9 0.231  15 0.477  21 0.343
+[4,]   4 0.116  10 0.246  16 0.485  22 0.329
+[5,]   5 0.170  11 0.314  17 0.281  23 0.370
+[6,]   6 0.247  12 0.396  18 0.344  24 0.363</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuZXN0aW0gPC0gYXJpbWEoeSxjKDMsMCwwKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code># 
+
+estim &lt;- arima(y,c(3,0,0)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgYXIxICAgYXIyICAgYXIzIGludGVyY2VwdFxuY29lZiAtMC4yODkgMC4xNzcgMC4xNjEgICAgIDAuMDAxXG5zZSAgICAwLjA3MyAwLjA3NSAwLjA3MyAgICAgMC4wMzdcbnB2YWwgIDAuMDAwIDAuMDE5IDAuMDI4ICAgICAwLjk4M1xuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuNjUzICAxMyAwLjc5MCAgMTkgMC43MzdcblsyLF0gICAyICAgIE5BICAgOCAwLjY4MSAgMTQgMC43ODYgIDIwIDAuNzkyXG5bMyxdICAgMyAgICBOQSAgIDkgMC41NjcgIDE1IDAuNzk5ICAyMSAwLjczMFxuWzQsXSAgIDQgMC42OTcgIDEwIDAuNTQ1ICAxNiAwLjgwNCAgMjIgMC42NDRcbls1LF0gICA1IDAuODcyICAxMSAwLjY0MCAgMTcgMC42MDIgIDIzIDAuNjgyXG5bNixdICAgNiAwLjkyMiAgMTIgMC43MzIgIDE4IDAuNjc0ICAyNCAwLjY3NlxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ar1   ar2   ar3 intercept
+coef -0.289 0.177 0.161     0.001
+se    0.073 0.075 0.073     0.037
+pval  0.000 0.019 0.028     0.983
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.653  13 0.790  19 0.737
+[2,]   2    NA   8 0.681  14 0.786  20 0.792
+[3,]   3    NA   9 0.567  15 0.799  21 0.730
+[4,]   4 0.697  10 0.545  16 0.804  22 0.644
+[5,]   5 0.872  11 0.640  17 0.602  23 0.682
+[6,]   6 0.922  12 0.732  18 0.674  24 0.676</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcbmFyMyA8LSBlc3RpbVxuXG5lc3RpbSA8LSBhcmltYSh5LGMoMCwwLDEpKTsgYXJpbWFmaXQoZXN0aW0pXG5gYGAifQ== -->
+<pre class="r"><code># 
+ar3 &lt;- estim
+
+estim &lt;- arima(y,c(0,0,1)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgbWExIGludGVyY2VwdFxuY29lZiAtMC4yMjIgICAgLTAuMDAyXG5zZSAgICAwLjA1OSAgICAgMC4wMjhcbnB2YWwgIDAuMDAwICAgICAwLjk1N1xuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuMDI0ICAxMyAwLjA3NSAgMTkgMC4wNzNcblsyLF0gICAyIDAuMDAxICAgOCAwLjAzOSAgMTQgMC4wOTMgIDIwIDAuMDk3XG5bMyxdICAgMyAwLjAwMyAgIDkgMC4wMjUgIDE1IDAuMDc3ICAyMSAwLjA3MlxuWzQsXSAgIDQgMC4wMDcgIDEwIDAuMDI5ICAxNiAwLjA4NyAgMjIgMC4wNjhcbls1LF0gICA1IDAuMDE0ICAxMSAwLjA0MCAgMTcgMC4wNDAgIDIzIDAuMDg1XG5bNixdICAgNiAwLjAyNCAgMTIgMC4wNTUgIDE4IDAuMDU1ICAyNCAwLjA3M1xuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ma1 intercept
+coef -0.222    -0.002
+se    0.059     0.028
+pval  0.000     0.957
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.024  13 0.075  19 0.073
+[2,]   2 0.001   8 0.039  14 0.093  20 0.097
+[3,]   3 0.003   9 0.025  15 0.077  21 0.072
+[4,]   4 0.007  10 0.029  16 0.087  22 0.068
+[5,]   5 0.014  11 0.040  17 0.040  23 0.085
+[6,]   6 0.024  12 0.055  18 0.055  24 0.073</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuZXN0aW0gPC0gYXJpbWEoeSxjKDAsMCwyKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code># 
+
+estim &lt;- arima(y,c(0,0,2)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgbWExICAgbWEyIGludGVyY2VwdFxuY29lZiAtMC4yOTcgMC4yNTQgICAgIDAuMDAwXG5zZSAgICAwLjA3NCAwLjA2NyAgICAgMC4wMzNcbnB2YWwgIDAuMDAwIDAuMDAwICAgICAwLjk5OFxuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuNjY1ICAxMyAwLjgwMSAgMTkgMC43NDFcblsyLF0gICAyICAgIE5BICAgOCAwLjcwMSAgMTQgMC44MDAgIDIwIDAuNzkwXG5bMyxdICAgMyAwLjYyOSAgIDkgMC42MDQgIDE1IDAuODAzICAyMSAwLjcxNVxuWzQsXSAgIDQgMC44NjAgIDEwIDAuNTc5ICAxNiAwLjgwMyAgMjIgMC42NTlcbls1LF0gICA1IDAuNzY5ICAxMSAwLjY2MiAgMTcgMC42MTQgIDIzIDAuNjk0XG5bNixdICAgNiAwLjg0NiAgMTIgMC43NDYgIDE4IDAuNjg0ICAyNCAwLjY5MlxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ma1   ma2 intercept
+coef -0.297 0.254     0.000
+se    0.074 0.067     0.033
+pval  0.000 0.000     0.998
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.665  13 0.801  19 0.741
+[2,]   2    NA   8 0.701  14 0.800  20 0.790
+[3,]   3 0.629   9 0.604  15 0.803  21 0.715
+[4,]   4 0.860  10 0.579  16 0.803  22 0.659
+[5,]   5 0.769  11 0.662  17 0.614  23 0.694
+[6,]   6 0.846  12 0.746  18 0.684  24 0.692</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcbm1hMiA8LSBlc3RpbVxuXG5lc3RpbSA8LSBhcmltYSh5LGMoMSwwLDEpKTsgYXJpbWFmaXQoZXN0aW0pXG5gYGAifQ== -->
+<pre class="r"><code># 
+ma2 &lt;- estim
+
+estim &lt;- arima(y,c(1,0,1)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICAgYXIxICAgbWExIGludGVyY2VwdFxuY29lZiAtMC40OTUgMC4yMDEgICAgLTAuMDAxXG5zZSAgICAwLjE0NiAwLjE1NyAgICAgMC4wMjlcbnB2YWwgIDAuMDAxIDAuMjAxICAgICAwLjk2NlxuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuMTA2ICAxMyAwLjI4MCAgMTkgMC4yNTVcblsyLF0gICAyICAgIE5BICAgOCAwLjE0NCAgMTQgMC4yOTUgIDIwIDAuMzA1XG5bMyxdICAgMyAwLjAxMiAgIDkgMC4xMDYgIDE1IDAuMjc5ICAyMSAwLjIyMVxuWzQsXSAgIDQgMC4wNDMgIDEwIDAuMTI1ICAxNiAwLjMwNyAgMjIgMC4yMDNcbls1LF0gICA1IDAuMDczICAxMSAwLjE2OSAgMTcgMC4xNjYgIDIzIDAuMjMyXG5bNixdICAgNiAwLjExNCAgMTIgMC4yMjUgIDE4IDAuMjEzICAyNCAwLjIyM1xuIn0= -->
+<pre><code>tests de nullite des coefficients :
+        ar1   ma1 intercept
+coef -0.495 0.201    -0.001
+se    0.146 0.157     0.029
+pval  0.001 0.201     0.966
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.106  13 0.280  19 0.255
+[2,]   2    NA   8 0.144  14 0.295  20 0.305
+[3,]   3 0.012   9 0.106  15 0.279  21 0.221
+[4,]   4 0.043  10 0.125  16 0.307  22 0.203
+[5,]   5 0.073  11 0.169  17 0.166  23 0.232
+[6,]   6 0.114  12 0.225  18 0.213  24 0.223</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuZXN0aW0gPC0gYXJpbWEoeSxjKDEsMCwyKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code># 
+
+estim &lt;- arima(y,c(1,0,2)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICBhcjEgICAgbWExICAgbWEyIGludGVyY2VwdFxuY29lZiAwLjMzOCAtMC42MjggMC4zMjcgICAgIDAuMDAxXG5zZSAgIDAuMzMyICAwLjMyNyAwLjA5NSAgICAgMC4wMzdcbnB2YWwgMC4zMDggIDAuMDU1IDAuMDAxICAgICAwLjk4N1xuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuNTYzICAxMyAwLjcyMSAgMTkgMC42ODdcblsyLF0gICAyICAgIE5BICAgOCAwLjYxNyAgMTQgMC43NTAgIDIwIDAuNzQzXG5bMyxdICAgMyAgICBOQSAgIDkgMC40ODggIDE1IDAuNzU0ICAyMSAwLjY0NlxuWzQsXSAgIDQgMC41NzEgIDEwIDAuNDY2ICAxNiAwLjc0NiAgMjIgMC41Njlcbls1LF0gICA1IDAuNTg3ICAxMSAwLjU2MCAgMTcgMC41NDQgIDIzIDAuNjA3XG5bNixdICAgNiAwLjc0OSAgMTIgMC42NTAgIDE4IDAuNjE5ICAyNCAwLjYwNFxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+       ar1    ma1   ma2 intercept
+coef 0.338 -0.628 0.327     0.001
+se   0.332  0.327 0.095     0.037
+pval 0.308  0.055 0.001     0.987
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.563  13 0.721  19 0.687
+[2,]   2    NA   8 0.617  14 0.750  20 0.743
+[3,]   3    NA   9 0.488  15 0.754  21 0.646
+[4,]   4 0.571  10 0.466  16 0.746  22 0.569
+[5,]   5 0.587  11 0.560  17 0.544  23 0.607
+[6,]   6 0.749  12 0.650  18 0.619  24 0.604</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuZXN0aW0gPC0gYXJpbWEoeSxjKDIsMCwxKSk7IGFyaW1hZml0KGVzdGltKVxuYGBgIn0= -->
+<pre class="r"><code># 
+
+estim &lt;- arima(y,c(2,0,1)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICBhcjEgICBhcjIgICAgbWExIGludGVyY2VwdFxuY29lZiAwLjIwMiAwLjMwMiAtMC40NzYgICAgIDAuMDAxXG5zZSAgIDAuMjAyIDAuMDgyICAwLjIwMiAgICAgMC4wMzdcbnB2YWwgMC4zMTcgMC4wMDAgIDAuMDE4ICAgICAwLjk4NVxuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuMzYyICAxMyAwLjU4NiAgMTkgMC41MDNcblsyLF0gICAyICAgIE5BICAgOCAwLjQxOCAgMTQgMC41OTMgIDIwIDAuNTYxXG5bMyxdICAgMyAgICBOQSAgIDkgMC4zMTcgIDE1IDAuNTk1ICAyMSAwLjQ0MVxuWzQsXSAgIDQgMC4yMjEgIDEwIDAuMzI5ICAxNiAwLjYwMyAgMjIgMC4zOThcbls1LF0gICA1IDAuNDA1ICAxMSAwLjQxNSAgMTcgMC4zNjkgIDIzIDAuNDM1XG5bNixdICAgNiAwLjQ5MyAgMTIgMC41MTAgIDE4IDAuNDQyICAyNCAwLjQyOFxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+       ar1   ar2    ma1 intercept
+coef 0.202 0.302 -0.476     0.001
+se   0.202 0.082  0.202     0.037
+pval 0.317 0.000  0.018     0.985
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.362  13 0.586  19 0.503
+[2,]   2    NA   8 0.418  14 0.593  20 0.561
+[3,]   3    NA   9 0.317  15 0.595  21 0.441
+[4,]   4 0.221  10 0.329  16 0.603  22 0.398
+[5,]   5 0.405  11 0.415  17 0.369  23 0.435
+[6,]   6 0.493  12 0.510  18 0.442  24 0.428</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcbmFyMm1hMSA8LSBlc3RpbVxuXG5lc3RpbSA8LSBhcmltYSh5LGMoMiwwLDIpKTsgYXJpbWFmaXQoZXN0aW0pXG5gYGAifQ== -->
+<pre class="r"><code># 
+ar2ma1 &lt;- estim
+
+estim &lt;- arima(y,c(2,0,2)); arimafit(estim)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGVzdHMgZGUgbnVsbGl0ZSBkZXMgY29lZmZpY2llbnRzIDpcbiAgICAgICBhcjEgICBhcjIgICAgbWExICAgbWEyIGludGVyY2VwdFxuY29lZiAwLjI4OSAwLjA5MiAtMC41ODMgMC4yNDYgICAgIDAuMDAxXG5zZSAgIDAuMjY4IDAuMTc3ICAwLjI2NiAwLjE3NiAgICAgMC4wMzdcbnB2YWwgMC4yODIgMC42MDIgIDAuMDI5IDAuMTYzICAgICAwLjk4M1xuXG4gdGVzdHMgZCdhYnNlbmNlIGQnYXV0b2NvcnJlbGF0aW9uIGRlcyByZXNpZHVzIDogXG4gICAgIGxhZyAgcHZhbCBsYWcgIHB2YWwgbGFnICBwdmFsIGxhZyAgcHZhbFxuWzEsXSAgIDEgICAgTkEgICA3IDAuNDMzICAxMyAwLjY2OSAgMTkgMC42MzVcblsyLF0gICAyICAgIE5BICAgOCAwLjQ5OCAgMTQgMC42OTEgIDIwIDAuNjk2XG5bMyxdICAgMyAgICBOQSAgIDkgMC4zOTYgIDE1IDAuNzAzICAyMSAwLjU5MVxuWzQsXSAgIDQgICAgTkEgIDEwIDAuMzg3ICAxNiAwLjcwMiAgMjIgMC41MTVcbls1LF0gICA1IDAuNDIxICAxMSAwLjQ4OCAgMTcgMC40ODUgIDIzIDAuNTUzXG5bNixdICAgNiAwLjYzNiAgMTIgMC41OTAgIDE4IDAuNTYzICAyNCAwLjU1MlxuIn0= -->
+<pre><code>tests de nullite des coefficients :
+       ar1   ar2    ma1   ma2 intercept
+coef 0.289 0.092 -0.583 0.246     0.001
+se   0.268 0.177  0.266 0.176     0.037
+pval 0.282 0.602  0.029 0.163     0.983
+
+ tests d&#39;absence d&#39;autocorrelation des residus : 
+     lag  pval lag  pval lag  pval lag  pval
+[1,]   1    NA   7 0.433  13 0.669  19 0.635
+[2,]   2    NA   8 0.498  14 0.691  20 0.696
+[3,]   3    NA   9 0.396  15 0.703  21 0.591
+[4,]   4    NA  10 0.387  16 0.702  22 0.515
+[5,]   5 0.421  11 0.488  17 0.485  23 0.553
+[6,]   6 0.636  12 0.590  18 0.563  24 0.552</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBcblxuXG4jIFxubW9kZWxzIDwtIGMoXCJhcjNcIixcIm1hMlwiLFwiYXIybWExXCIpOyBuYW1lcyhtb2RlbHMpIDwtIG1vZGVsc1xuYXBwbHkoYXMubWF0cml4KG1vZGVscyksMSwgZnVuY3Rpb24obSkgYyhcIkFJQ1wiPUFJQyhnZXQobSkpLCBcIkJJQ1wiPUJJQyhnZXQobSkpKSlcbmBgYCJ9 -->
+<pre class="r"><code># 
+
+
+# 
+models &lt;- c(&quot;ar3&quot;,&quot;ma2&quot;,&quot;ar2ma1&quot;); names(models) &lt;- models
+apply(as.matrix(models),1, function(m) c(&quot;AIC&quot;=AIC(get(m)), &quot;BIC&quot;=BIC(get(m))))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICAgICAgYXIzICAgICAgbWEyICAgYXIybWExXG5BSUMgMjU2LjY2MTIgMjU1LjU3NzQgMjU4LjYwMzlcbkJJQyAyNzIuNzM1OSAyNjguNDM3MSAyNzQuNjc4NlxuIn0= -->
+<pre><code>         ar3      ma2   ar2ma1
+AIC 256.6612 255.5774 258.6039
+BIC 272.7359 268.4371 274.6786</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2sgLSBMaW5lYXIgVGltZSBTZXJpZXMgVFAxIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NCg0KDQojIFRQMSBkZSBzw6lyaWVzIHRlbXBvcmVsbGVzIGxpbsOpYWlyZXMNCg0KYGBge3J9DQpybShsaXN0ID0gbHMoKSkNCnJlcXVpcmUoem9vKSAjZm9ybWF0IGRlIHNlcmllIHRlbXBvcmVsbGUgcHJhdGlxdWUgZXQgZmFjaWxlIGQndXRpbGlzYXRpb24gKG1haXMgcGx1cyB2b2x1bWluZXV4KQ0KbGlicmFyeSgiZ2dwbG90MiIpDQpsaWJyYXJ5KCJ0c2VyaWVzIikNCmBgYA0KDQojIyMgUXVlc3Rpb24gMSAtIGltcG9ydGF0YXRpb24gZGVzIGRvbm7DqWVzDQpgYGB7cn0NCmRvbm5lZXMxID0gcmVhZC5jc3YoZmlsZT0iLi9Eb25uw6llc19UUDEvRG9ubmVlczEuY3N2IikNCg0KbiA9IGxlbmd0aChkb25uZWVzMSRYTSkgLSA0DQp4bSA9IHpvbyhkb25uZWVzMSRYTVsxOm5dKQ0KYGBgDQoNCg0KIyMjIFF1ZXN0aW9uIDIgLSBkw6lzYWlzb25uYWxpc2F0aW9uDQpgYGB7cn0NCmluZGV4ID0gMTpuDQpkYXRhX2Rpc3BsYXkgPSBhcy5kYXRhLmZyYW1lKGNiaW5kKGluZGV4LHhtKSkNCnAxID0gZ2dwbG90KGRhdGEgPSBkYXRhX2Rpc3BsYXkpICsgZ2VvbV9saW5lKGFlcyh4PWluZGV4LHk9eG0pKQ0KcDENCmBgYA0KT24gb2JzZXJ2ZSB1bmUgc2Fpc29ubmFsaXTDqSBkZSAxMiBtb2lzLg0KUG91ciByw6lzb3VkcmUgbGUgcHJvYmzDqG1lIGRlIHNhaXNvbm5hbGl0w6ksIG9uIHBldXQgZGlmZsOpcmVuY2llciBsYSBzw6lyaWUgYXZlYyB1biBwYXMgdGVtcG9yZWwgZGUgMTIgbW9pcy4NCg0KYGBge3J9DQpkZXNhaXNvbiA9IHhtIC0gbGFnKHhtLC0xMikNCnBsb3QoZGVzYWlzb24pDQpgYGANCg0KTCdleGVyY2ljZSBzdXBwb3NlIHF1ZSBkZXNhaXNvbiBzdWl0IHVuIEFSSU1BKHAsZCxxKS4NCg0KIyMjIFF1ZXN0aW9uIDMNCg0KYGBge3J9DQphY2YoZGVzYWlzb24pDQpgYGANCmBgYHtyfQ0KcGFjZihkZXNhaXNvbikNCmBgYA0KTCdhdXRvY29ycsOpbG9ncmFtbWUgZMOpY3Jvw650IMOgIHVuZSB2aXRlc3NlIGV4cG9uZW50aWVsbGUsIGRvbmMgbGEgc8OpcmllIHNlbWJsZSBtYWludGVuYW50IGJpZW4gc3RhdGlvbm5haXJlLg0KDQojIyMgUXVlc3Rpb24gNCAtIHRlc3QgZGUgcmFjaW5lIHVuaXRhaXJlDQpgYGB7cn0NCnBsb3QoZGVzYWlzb24pDQpwcC50ZXN0KGRlc2Fpc29uKQ0KYGBgDQoqVGVzdCBkZSBVbml0IFJvb3QgZGUgUGhpbGlwcy1QZXJyb250LioNCg0KT24gcmVqZXR0ZSBkZSBsJ2h5cG90aMOoc2UgbnVsbGUgw6AgMSUsIHF1aSDDqXTDqWl0IGwnaHlwb3Row6hzZSBkZSBub24tc3RhdGlvbm5hcml0w6kuDQoNCkxlIHRlc3QgY29uZmlybWUgZG9uYyBiaWVuIGxlcyBjb25jbHVzaW9ucyBwcsOpY8OpZGVudGVzLg0KDQojIyMgUXVlc3Rpb24gNQ0KDQpFbiB2ZXJ0dSBkdSBBQ0YsIGplIHByZW5kcmFpcyAkcT0yJC4NCkxlIFBBQ0Ygc2VtYmxlIGluZGlxdWVyICRwPTMkLg0KDQpBaW5zaSwgb24gdmV1dCB0ZXN0ZXIgc2kgbGEgc8OpcmllIHN1aXQgYmllbiB1biAkQVJJTUEoMywwLDIpJC4NCg0KDQpgYGB7cn0NCmFyaW1hMzAyID0gYXJpbWEoZGVzYWlzb24gLSBtZWFuKGRlc2Fpc29uKSwgYygzLDAsMikpDQoNCnN0YXRzOjpCb3gudGVzdChhcmltYTMwMiRyZXNpZHVhbHMsbGFnID0gNiwgdHlwZT0iTGp1bmctQm94IixmaXRkZiA9IDUpDQoNCmBgYA0KIkJveC50ZXN0IiA6IHBlcm1ldCBkJ3V0aWxpc2VyIGxlcyB0ZXN0cyBkZSBCb3gtUGllcmNlIG91IExqdW5kLUJveCwgYydlc3Qtw6AtZGlyZSB0ZXN0ZXIgcydpbCB5IGEgZW5jb3JlIGRlIGxhIGR5bmFtaXF1ZSBkYW5zIGxlcyByw6lzaWR1cy4NCi0gZml0ZGYgOiBudW1iZXIgb2YgZGVncmVlcyBvZiBmcmVlZG9tIHRvIGJlIHN1YnN0cmFjdGVkIGlmICR4JCBpcyBhIHNlcmllcyBvZiByZXNpZHVhbHMNCiAgLSBkb25jIGljaSBmaXRkZiA9IHArcSA9IDUNCiAgLSBsYWcgOiB0aGUgc3RhdGlzdGljIHdpbGwgYmUgYmFzZWQgb24gJGxhZyQgYXV0b29ycmVsYXRpb24gY29lZmZpY2llbnRzDQogIA0KDQoNCmBgYHtyfQ0KUXRlc3RzIDwtIGZ1bmN0aW9uKHNlcmllcywgaywgZml0ZGYgPSAwKXsNCiAgbXlfZnVuYzwtIGZ1bmN0aW9uKGwpew0KICAgIHB2YWwgPSBpZihsPD1maXRkZikgTkEgZWxzZSBCb3gudGVzdChzZXJpZXMsbGFnID0gbCwgdHlwZSA9IkxqdW5nLUJveCIsZml0ZGY9Zml0ZGYpJHAudmFsdWUNCiAgICByZXR1cm4oYygibGFnIj1sLCJwdmFsIj1wdmFsKSkNCiAgfQ0KDQogIHB2YWxzIDwtIGFwcGx5KG1hdHJpeCgxOmspLCAxLCBGVU4gPSBteV9mdW5jKQ0KICByZXR1cm4odChwdmFscykpDQp9DQoNClF0ZXN0cyhhcmltYTMwMiRyZXNpZHVhbHMsIDI1LCA1KSAjIHRlc3QgZGUgTGp1bmctQm94IHBvdXIgbGVzIG9yZHJlcyBkZSAxIMOgIDI0DQpyb3VuZChRdGVzdHMoYXJpbWEzMDIkcmVzaWR1YWxzLDI0LGZpdGRmPTUpLDMpDQpgYGANCg0KT24gZmFpdCBwbGVpbiBkZSBmb2lzIGxlIHRlc3QgZGUgTGp1bmctQm94IChwb3VyIHRvdXMgbGVzIG9yZHJlcykuDQoNCk9uIG5lIHJlamV0dGUgw6AgYXVjdW4gbml2ZWF1IHVzdWVsIGwnaW5kw6lwZW5kYW5jZSBkZXMgcsOpc2lkdXMsIHBvdXIgbidpbXBvcnRlIHF1ZWwgbGFnIGVudHJlIDUgZXQgMjQgIQ0KDQpBaW5zaSwgbGUgbW9kw6hsZSBzZW1ibGUgYXNzZXogY29tbXBsZXhlIHBvdXIgY2V0dGUgc8OpcmllIHRlbXBvcmVsbGUuDQoNCiMjIyBRdWVzdGlvbiA2DQpMZXMgc291cy1tb2TDqGxlcyBwb3NzaWJsZXMgc29udCBsZXMgc3VpdmFudHMgOg0KLSBBUklNQSgyLDAsMikNCi0gQVJJTUEoMSwwLDIpDQotIE1BKDAsMikNCg0KLSBBUklNQSgzLDAsMSkNCi0gQVJJTUEoMiwwLDEpDQotIEFSSU1BKDEsMCwxKQ0KLSBNQSgxKQ0KDQotIEFSKDMpDQotIEFSKDIpDQotIEFSKDEpDQoNCi0gQVJJTUEoMCwwLDApDQoNClBvdXIgY2hvaXNpciBwYXJtaSBjZXMgbW9kw6hsZXMsIGlsIHN1ZmZpdCBkZSB0ZXN0ZXIgbGEgbnVsbGl0w6kgZHUgY29lZmZpY2llbnQgcCBvdSBxIGR1IG1vZMOobGUgYWN0dWVsbGVtZW50IGNvbnNpZMOpcsOpLg0KDQpgYGB7cn0NCnNpZ25pZiA8LSBmdW5jdGlvbihlc3RpbSl7DQogIGNvZWYgPC0gZXN0aW0kY29lZg0KICBzZSA9IHNxcnQoZGlhZyhlc3RpbSR2YXIuY29lZikpDQogIHQgPC0gY29lZi9zZQ0KICANCiAgcHZhbCA8LSAoMS1wbm9ybShhYnModCkpKSoyICMgZm9ybXVsZSBkZSBsYSBwdmFsZXVyIHBvdXIgdW4gdGVzdCBkZSBTdHVkZW50IDogb24gbGUgcmV0cm91dmUgZmFjaWxlbWVudCBwYXIgbGUgY2FsY3VsDQogIHJldHVybihyYmluZChjb2VmLHNlLHB2YWwpKQ0KfQ0KDQpzaWduaWYoYXJpbWEzMDIpDQpgYGANCg0KT24gbmUgcmVqZXR0ZSBwYXMgcXVlIGNvZWZmaWNpZW50ICRccGhpX3AkIGV0ICRccHNpX3EkIHNvbnQgbm9uIG51bHMuDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2sgLSBMaW5lYXIgVGltZSBTZXJpZXMgVFAxIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NCg0KDQojIFRQMSBkZSBzw6lyaWVzIHRlbXBvcmVsbGVzIGxpbsOpYWlyZXMNCg0KYGBge3J9DQpybShsaXN0ID0gbHMoKSkNCnJlcXVpcmUoem9vKSAjZm9ybWF0IGRlIHNlcmllIHRlbXBvcmVsbGUgcHJhdGlxdWUgZXQgZmFjaWxlIGQndXRpbGlzYXRpb24gKG1haXMgcGx1cyB2b2x1bWluZXV4KQ0KbGlicmFyeSgiZ2dwbG90MiIpDQpsaWJyYXJ5KCJ0c2VyaWVzIikNCmBgYA0KDQojIyMgUXVlc3Rpb24gMSAtIGltcG9ydGF0YXRpb24gZGVzIGRvbm7DqWVzDQpgYGB7cn0NCmRvbm5lZXMxID0gcmVhZC5jc3YoZmlsZT0iLi9Eb25uw6llc19UUDEvRG9ubmVlczEuY3N2IikNCg0KbiA9IGxlbmd0aChkb25uZWVzMSRYTSkgLSA0DQp4bSA9IHpvbyhkb25uZWVzMSRYTVsxOm5dKQ0KYGBgDQoNCg0KIyMjIFF1ZXN0aW9uIDIgLSBkw6lzYWlzb25uYWxpc2F0aW9uDQpgYGB7cn0NCmluZGV4ID0gMTpuDQpkYXRhX2Rpc3BsYXkgPSBhcy5kYXRhLmZyYW1lKGNiaW5kKGluZGV4LHhtKSkNCnAxID0gZ2dwbG90KGRhdGEgPSBkYXRhX2Rpc3BsYXkpICsgZ2VvbV9saW5lKGFlcyh4PWluZGV4LHk9eG0pKQ0KcDENCmBgYA0KT24gb2JzZXJ2ZSB1bmUgc2Fpc29ubmFsaXTDqSBkZSAxMiBtb2lzLg0KUG91ciByw6lzb3VkcmUgbGUgcHJvYmzDqG1lIGRlIHNhaXNvbm5hbGl0w6ksIG9uIHBldXQgZGlmZsOpcmVuY2llciBsYSBzw6lyaWUgYXZlYyB1biBwYXMgdGVtcG9yZWwgZGUgMTIgbW9pcy4NCg0KYGBge3J9DQpkZXNhaXNvbiA9IHhtIC0gbGFnKHhtLC0xMikNCnBsb3QoZGVzYWlzb24pDQpgYGANCg0KTCdleGVyY2ljZSBzdXBwb3NlIHF1ZSBkZXNhaXNvbiBzdWl0IHVuIEFSSU1BKHAsZCxxKS4NCg0KIyMjIFF1ZXN0aW9uIDMNCg0KYGBge3J9DQphY2YoZGVzYWlzb24pDQpgYGANCmBgYHtyfQ0KcGFjZihkZXNhaXNvbikNCmBgYA0KTCdhdXRvY29ycsOpbG9ncmFtbWUgZMOpY3Jvw650IMOgIHVuZSB2aXRlc3NlIGV4cG9uZW50aWVsbGUsIGRvbmMgbGEgc8OpcmllIHNlbWJsZSBtYWludGVuYW50IGJpZW4gc3RhdGlvbm5haXJlLg0KDQojIyMgUXVlc3Rpb24gNCAtIHRlc3QgZGUgcmFjaW5lIHVuaXRhaXJlDQpgYGB7cn0NCnBsb3QoZGVzYWlzb24pDQpwcC50ZXN0KGRlc2Fpc29uKQ0KYGBgDQoqVGVzdCBkZSBVbml0IFJvb3QgZGUgUGhpbGlwcy1QZXJyb250LioNCg0KT24gcmVqZXR0ZSBkZSBsJ2h5cG90aMOoc2UgbnVsbGUgw6AgMSUsIHF1aSDDqXTDqWl0IGwnaHlwb3Row6hzZSBkZSBub24tc3RhdGlvbm5hcml0w6kuDQoNCkxlIHRlc3QgY29uZmlybWUgZG9uYyBiaWVuIGxlcyBjb25jbHVzaW9ucyBwcsOpY8OpZGVudGVzLg0KDQojIyMgUXVlc3Rpb24gNQ0KDQpFbiB2ZXJ0dSBkdSBBQ0YsIGplIHByZW5kcmFpcyAkcT0yJC4NCkxlIFBBQ0Ygc2VtYmxlIGluZGlxdWVyICRwPTMkLg0KDQpBaW5zaSwgb24gdmV1dCB0ZXN0ZXIgc2kgbGEgc8OpcmllIHN1aXQgYmllbiB1biAkQVJJTUEoMywwLDIpJC4NCg0KDQpgYGB7cn0NCmFyaW1hMzAyID0gYXJpbWEoZGVzYWlzb24gLSBtZWFuKGRlc2Fpc29uKSwgYygzLDAsMikpDQoNCnN0YXRzOjpCb3gudGVzdChhcmltYTMwMiRyZXNpZHVhbHMsbGFnID0gNiwgdHlwZT0iTGp1bmctQm94IixmaXRkZiA9IDUpDQoNCmBgYA0KIkJveC50ZXN0IiA6IHBlcm1ldCBkJ3V0aWxpc2VyIGxlcyB0ZXN0cyBkZSBCb3gtUGllcmNlIG91IExqdW5kLUJveCwgYydlc3Qtw6AtZGlyZSB0ZXN0ZXIgcydpbCB5IGEgZW5jb3JlIGRlIGxhIGR5bmFtaXF1ZSBkYW5zIGxlcyByw6lzaWR1cy4NCi0gZml0ZGYgOiBudW1iZXIgb2YgZGVncmVlcyBvZiBmcmVlZG9tIHRvIGJlIHN1YnN0cmFjdGVkIGlmICR4JCBpcyBhIHNlcmllcyBvZiByZXNpZHVhbHMNCiAgLSBkb25jIGljaSBmaXRkZiA9IHArcSA9IDUNCiAgLSBsYWcgOiB0aGUgc3RhdGlzdGljIHdpbGwgYmUgYmFzZWQgb24gJGxhZyQgYXV0b29ycmVsYXRpb24gY29lZmZpY2llbnRzDQogIA0KDQoNCmBgYHtyfQ0KUXRlc3RzIDwtIGZ1bmN0aW9uKHNlcmllcywgaywgZml0ZGYgPSAwKXsNCiAgbXlfZnVuYzwtIGZ1bmN0aW9uKGwpew0KICAgIHB2YWwgPSBpZihsPD1maXRkZikgTkEgZWxzZSBCb3gudGVzdChzZXJpZXMsbGFnID0gbCwgdHlwZSA9IkxqdW5nLUJveCIsZml0ZGY9Zml0ZGYpJHAudmFsdWUNCiAgICByZXR1cm4oYygibGFnIj1sLCJwdmFsIj1wdmFsKSkNCiAgfQ0KDQogIHB2YWxzIDwtIGFwcGx5KG1hdHJpeCgxOmspLCAxLCBGVU4gPSBteV9mdW5jKQ0KICByZXR1cm4odChwdmFscykpDQp9DQoNClF0ZXN0cyhhcmltYTMwMiRyZXNpZHVhbHMsIDI1LCA1KSAjIHRlc3QgZGUgTGp1bmctQm94IHBvdXIgbGVzIG9yZHJlcyBkZSAxIMOgIDI0DQpyb3VuZChRdGVzdHMoYXJpbWEzMDIkcmVzaWR1YWxzLDI0LGZpdGRmPTUpLDMpDQpgYGANCg0KT24gZmFpdCBwbGVpbiBkZSBmb2lzIGxlIHRlc3QgZGUgTGp1bmctQm94IChwb3VyIHRvdXMgbGVzIG9yZHJlcykuDQoNCk9uIG5lIHJlamV0dGUgw6AgYXVjdW4gbml2ZWF1IHVzdWVsIGwnaW5kw6lwZW5kYW5jZSBkZXMgcsOpc2lkdXMsIHBvdXIgbidpbXBvcnRlIHF1ZWwgbGFnIGVudHJlIDUgZXQgMjQgIQ0KDQpBaW5zaSwgbGUgbW9kw6hsZSBzZW1ibGUgYXNzZXogY29tbXBsZXhlIHBvdXIgY2V0dGUgc8OpcmllIHRlbXBvcmVsbGUuDQoNCiMjIyBRdWVzdGlvbiA2DQpMZXMgc291cy1tb2TDqGxlcyBwb3NzaWJsZXMgc29udCBsZXMgc3VpdmFudHMgOg0KLSBBUklNQSgyLDAsMikNCi0gQVJJTUEoMSwwLDIpDQotIE1BKDAsMikNCg0KLSBBUklNQSgzLDAsMSkNCi0gQVJJTUEoMiwwLDEpDQotIEFSSU1BKDEsMCwxKQ0KLSBNQSgxKQ0KDQotIEFSKDMpDQotIEFSKDIpDQotIEFSKDEpDQoNCi0gQVJJTUEoMCwwLDApDQoNClBvdXIgY2hvaXNpciBwYXJtaSBjZXMgbW9kw6hsZXMsIGlsIHN1ZmZpdCBkZSB0ZXN0ZXIgbGEgbnVsbGl0w6kgZHUgY29lZmZpY2llbnQgcCBvdSBxIGR1IG1vZMOobGUgYWN0dWVsbGVtZW50IGNvbnNpZMOpcsOpLg0KDQpgYGB7cn0NCnNpZ25pZiA8LSBmdW5jdGlvbihlc3RpbSl7DQogIGNvZWYgPC0gZXN0aW0kY29lZg0KICBzZSA9IHNxcnQoZGlhZyhlc3RpbSR2YXIuY29lZikpDQogIHQgPC0gY29lZi9zZQ0KICANCiAgcHZhbCA8LSAoMS1wbm9ybShhYnModCkpKSoyICMgZm9ybXVsZSBkZSBsYSBwdmFsZXVyIHBvdXIgdW4gdGVzdCBkZSBTdHVkZW50IDogb24gbGUgcmV0cm91dmUgZmFjaWxlbWVudCBwYXIgbGUgY2FsY3VsDQogIHJldHVybihyYmluZChjb2VmLHNlLHB2YWwpKQ0KfQ0KDQpzaWduaWYoYXJpbWEzMDIpDQpgYGANCg0KT24gbmUgcmVqZXR0ZSBwYXMgcXVlIGNvZWZmaWNpZW50ICRccGhpX3AkIGV0ICRccHNpX3EkIHNvbnQgbm9uIG51bHMuDQoNCmBgYHtyfQ0KeSA9IGRlc2Fpc29uIC0gbWVhbihkZXNhaXNvbikNCg0KYXJpbWFmaXQgPC0gZnVuY3Rpb24oZXN0aW0pew0KICBhZGp1c3QgPC0gcm91bmQoc2lnbmlmKGVzdGltKSwzKQ0KICBwdmFscyA8LSBRdGVzdHMoZXN0aW0kcmVzaWR1YWxzLDI0LGxlbmd0aChlc3RpbSRjb2VmKS0xKQ0KICBwdmFscyA8LSBtYXRyaXgoYXBwbHkobWF0cml4KDE6MjQsbnJvdz02KSwyLGZ1bmN0aW9uKGMpIHJvdW5kKHB2YWxzW2MsXSwzKSksbnJvdz02KQ0KICBjb2xuYW1lcyhwdmFscykgPC0gcmVwKGMoImxhZyIsICJwdmFsIiksNCkNCiAgY2F0KCJ0ZXN0cyBkZSBudWxsaXRlIGRlcyBjb2VmZmljaWVudHMgOlxuIikNCiAgcHJpbnQoYWRqdXN0KQ0KICBjYXQoIlxuIHRlc3RzIGQnYWJzZW5jZSBkJ2F1dG9jb3JyZWxhdGlvbiBkZXMgcmVzaWR1cyA6IFxuIikNCiAgcHJpbnQocHZhbHMpDQp9DQoNCmVzdGltIDwtIGFyaW1hKHksYygxLDAsMCkpOyBhcmltYWZpdChlc3RpbSkNCiMgDQoNCmVzdGltIDwtIGFyaW1hKHksYygyLDAsMCkpOyBhcmltYWZpdChlc3RpbSkNCiMgDQoNCmVzdGltIDwtIGFyaW1hKHksYygzLDAsMCkpOyBhcmltYWZpdChlc3RpbSkNCiMgDQphcjMgPC0gZXN0aW0NCg0KZXN0aW0gPC0gYXJpbWEoeSxjKDAsMCwxKSk7IGFyaW1hZml0KGVzdGltKQ0KIyANCg0KZXN0aW0gPC0gYXJpbWEoeSxjKDAsMCwyKSk7IGFyaW1hZml0KGVzdGltKQ0KIyANCm1hMiA8LSBlc3RpbQ0KDQplc3RpbSA8LSBhcmltYSh5LGMoMSwwLDEpKTsgYXJpbWFmaXQoZXN0aW0pDQojIA0KDQplc3RpbSA8LSBhcmltYSh5LGMoMSwwLDIpKTsgYXJpbWFmaXQoZXN0aW0pDQojIA0KDQplc3RpbSA8LSBhcmltYSh5LGMoMiwwLDEpKTsgYXJpbWFmaXQoZXN0aW0pDQojIA0KYXIybWExIDwtIGVzdGltDQoNCmVzdGltIDwtIGFyaW1hKHksYygyLDAsMikpOyBhcmltYWZpdChlc3RpbSkNCiMgDQoNCg0KIyANCm1vZGVscyA8LSBjKCJhcjMiLCJtYTIiLCJhcjJtYTEiKTsgbmFtZXMobW9kZWxzKSA8LSBtb2RlbHMNCmFwcGx5KGFzLm1hdHJpeChtb2RlbHMpLDEsIGZ1bmN0aW9uKG0pIGMoIkFJQyI9QUlDKGdldChtKSksICJCSUMiPUJJQyhnZXQobSkpKSkNCg0KYGBgDQoNCg==</div>
 
 
 

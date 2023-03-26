@@ -135,3 +135,55 @@ signif(arima302)
 ```
 
 On ne rejette pas que coefficient $\phi_p$ et $\psi_q$ sont non nuls.
+
+```{r}
+y = desaison - mean(desaison)
+
+arimafit <- function(estim){
+  adjust <- round(signif(estim),3)
+  pvals <- Qtests(estim$residuals,24,length(estim$coef)-1)
+  pvals <- matrix(apply(matrix(1:24,nrow=6),2,function(c) round(pvals[c,],3)),nrow=6)
+  colnames(pvals) <- rep(c("lag", "pval"),4)
+  cat("tests de nullite des coefficients :\n")
+  print(adjust)
+  cat("\n tests d'absence d'autocorrelation des residus : \n")
+  print(pvals)
+}
+
+estim <- arima(y,c(1,0,0)); arimafit(estim)
+# 
+
+estim <- arima(y,c(2,0,0)); arimafit(estim)
+# 
+
+estim <- arima(y,c(3,0,0)); arimafit(estim)
+# 
+ar3 <- estim
+
+estim <- arima(y,c(0,0,1)); arimafit(estim)
+# 
+
+estim <- arima(y,c(0,0,2)); arimafit(estim)
+# 
+ma2 <- estim
+
+estim <- arima(y,c(1,0,1)); arimafit(estim)
+# 
+
+estim <- arima(y,c(1,0,2)); arimafit(estim)
+# 
+
+estim <- arima(y,c(2,0,1)); arimafit(estim)
+# 
+ar2ma1 <- estim
+
+estim <- arima(y,c(2,0,2)); arimafit(estim)
+# 
+
+
+# 
+models <- c("ar3","ma2","ar2ma1"); names(models) <- models
+apply(as.matrix(models),1, function(m) c("AIC"=AIC(get(m)), "BIC"=BIC(get(m))))
+
+```
+
