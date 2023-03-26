@@ -1,0 +1,137 @@
+---
+title: "R Notebook - Linear Time Series TP1"
+output: html_notebook
+---
+
+
+# TP1 de séries temporelles linéaires
+
+```{r}
+rm(list = ls())
+require(zoo) #format de serie temporelle pratique et facile d'utilisation (mais plus volumineux)
+library("ggplot2")
+library("tseries")
+```
+
+### Question 1 - importatation des données
+```{r}
+donnees1 = read.csv(file="./Données_TP1/Donnees1.csv")
+
+n = length(donnees1$XM) - 4
+xm = zoo(donnees1$XM[1:n])
+```
+
+
+### Question 2 - désaisonnalisation
+```{r}
+index = 1:n
+data_display = as.data.frame(cbind(index,xm))
+p1 = ggplot(data = data_display) + geom_line(aes(x=index,y=xm))
+p1
+```
+On observe une saisonnalité de 12 mois.
+Pour résoudre le problème de saisonnalité, on peut différencier la série avec un pas temporel de 12 mois.
+
+```{r}
+desaison = xm - lag(xm,-12)
+plot(desaison)
+```
+
+L'exercice suppose que desaison suit un ARIMA(p,d,q).
+
+### Question 3
+
+```{r}
+acf(desaison)
+```
+```{r}
+pacf(desaison)
+```
+L'autocorrélogramme décroît à une vitesse exponentielle, donc la série semble maintenant bien stationnaire.
+
+### Question 4 - test de racine unitaire
+```{r}
+plot(desaison)
+pp.test(desaison)
+```
+*Test de Unit Root de Philips-Perront.*
+
+On rejette de l'hypothèse nulle à 1%, qui étéit l'hypothèse de non-stationnarité.
+
+Le test confirme donc bien les conclusions précédentes.
+
+### Question 5
+
+En vertu du ACF, je prendrais $q=2$.
+Le PACF semble indiquer $p=3$.
+
+Ainsi, on veut tester si la série suit bien un $ARIMA(3,0,2)$.
+
+
+```{r}
+arima302 = arima(desaison - mean(desaison), c(3,0,2))
+
+stats::Box.test(arima302$residuals,lag = 6, type="Ljung-Box",fitdf = 5)
+
+```
+"Box.test" : permet d'utiliser les tests de Box-Pierce ou Ljund-Box, c'est-à-dire tester s'il y a encore de la dynamique dans les résidus.
+- fitdf : number of degrees of freedom to be substracted if $x$ is a series of residuals
+  - donc ici fitdf = p+q = 5
+  - lag : the statistic will be based on $lag$ autoorrelation coefficients
+  
+
+
+```{r}
+Qtests <- function(series, k, fitdf = 0){
+  my_func<- function(l){
+    pval = if(l<=fitdf) NA else Box.test(series,lag = l, type ="Ljung-Box",fitdf=fitdf)$p.value
+    return(c("lag"=l,"pval"=pval))
+  }
+
+  pvals <- apply(matrix(1:k), 1, FUN = my_func)
+  return(t(pvals))
+}
+
+Qtests(arima302$residuals, 25, 5) # test de Ljung-Box pour les ordres de 1 à 24
+round(Qtests(arima302$residuals,24,fitdf=5),3)
+```
+
+On fait plein de fois le test de Ljung-Box (pour tous les ordres).
+
+On ne rejette à aucun niveau usuel l'indépendance des résidus, pour n'importe quel lag entre 5 et 24 !
+
+Ainsi, le modèle semble assez commplexe pour cette série temporelle.
+
+### Question 6
+Les sous-modèles possibles sont les suivants :
+- ARIMA(2,0,2)
+- ARIMA(1,0,2)
+- MA(0,2)
+
+- ARIMA(3,0,1)
+- ARIMA(2,0,1)
+- ARIMA(1,0,1)
+- MA(1)
+
+- AR(3)
+- AR(2)
+- AR(1)
+
+- ARIMA(0,0,0)
+
+Pour choisir parmi ces modèles, il suffit de tester la nullité du coefficient p ou q du modèle actuellement considéré.
+
+```{r}
+signif <- function(estim){
+  coef <- estim$coef
+  se = sqrt(diag(estim$var.coef))
+  t <- coef/se
+  
+  pval <- (1-pnorm(abs(t)))*2 # formule de la pvaleur pour un test de Student : on le retrouve facilement par le calcul
+  return(rbind(coef,se,pval))
+}
+
+signif(arima302)
+```
+
+On ne rejette pas que coefficient $\phi_p$ et $\psi_q$ sont non nuls.
