@@ -15,8 +15,9 @@ library("tseries")
 
 ### Question 1 - importatation des données
 ```{r}
-donnees1 = read.csv(file="./Données_TP1/Donnees1.csv")
+donnees1 = read.csv(file="./Donnees/Donnees1.csv")
 
+xm.source = zoo(donnees1)
 n = length(donnees1$XM) - 4
 xm = zoo(donnees1$XM[1:n])
 ```
@@ -74,10 +75,12 @@ arima302 = arima(desaison - mean(desaison), c(3,0,2))
 stats::Box.test(arima302$residuals,lag = 6, type="Ljung-Box",fitdf = 5)
 
 ```
-"Box.test" : permet d'utiliser les tests de Box-Pierce ou Ljund-Box, c'est-à-dire tester s'il y a encore de la dynamique dans les résidus.
+
+"Box.test" : permet d'utiliser les tests de Box-Pierce ou Ljung-Box, c'est-à-dire tester s'il y a encore de la dynamique dans les résidus.
 - fitdf : number of degrees of freedom to be substracted if $x$ is a series of residuals
   - donc ici fitdf = p+q = 5
   - lag : the statistic will be based on $lag$ autoorrelation coefficients
+    - $lag=k$ dans mes notes Obsidian sur ces tests
   
 
 
@@ -100,7 +103,7 @@ On fait plein de fois le test de Ljung-Box (pour tous les ordres).
 
 On ne rejette à aucun niveau usuel l'indépendance des résidus, pour n'importe quel lag entre 5 et 24 !
 
-Ainsi, le modèle semble assez commplexe pour cette série temporelle.
+Ainsi, le modèle semble assez riche ("valide" selon la correction) pour cette série temporelle.
 
 ### Question 6
 Les sous-modèles possibles sont les suivants :
@@ -135,6 +138,8 @@ signif(arima302)
 ```
 
 On ne rejette pas que coefficient $\phi_p$ et $\psi_q$ sont non nuls.
+
+*Correction* : Aucun coefficient n'est statistiquement significatif. Notre ARIMA(3,0,2) ne semble donc pas bien ajusté.
 
 ```{r}
 y = desaison - mean(desaison)
@@ -186,4 +191,47 @@ models <- c("ar3","ma2","ar2ma1"); names(models) <- models
 apply(as.matrix(models),1, function(m) c("AIC"=AIC(get(m)), "BIC"=BIC(get(m))))
 
 ```
+Modèle AR(1) : bien ajusté mais pas valide, car autocorrélation des résidus
+Modèle AR(2) : même pas bien ajusté
 
+Le modèle AR(3) est le premier modèle où les coefficients sont tous significatifs et dont les résidus ne semblent pas avoir d'autocorrélation.
+-> Modèle candidat A
+
+MA(2) :  les deux coefficients sont significatifs et pas d'autocorrélation des résidus.
+-> Modèle candidat B
+
+Modèle sans autocorrrélation des résidus et avec des coefficients pas tous significatifs -> rejet du modèle, on ne le garde pas.
+
+ARIMA(2,0,1) : on le garde pcq 2 coefs sur 3 significatifs et pas d'autocorrélation des résiduds
+
+**Moi** : à mon avis, on garde un modèle qui a des coefficients non significiatifs, si le dernier coefficient de chaque ordre est bien significatif
+
+
+### Question 7 - prévision avec les modèles
+```{r}
+##
+models <-  c("ar3","ma2","ar2ma1")
+preds <- zoo(matrix(NA,ncol=3,nrow=4),order.by=tail(index(xm.source),4))
+colnames(preds) <- models
+desaisonp <- preds #
+xmp <- preds #
+
+##
+for (m in models){
+  pred1 <- mean(desaison) + zoo(predict(get(m),4)$pred, order.by=tail(index(xm.source),4))
+  pred2 <- as.numeric(tail(xm,12))[1:4] + pred1
+  desaisonp[,m] <- pred1
+  xmp[,m] <- pred2
+}
+
+obs <- tail(xm.source,4) #on stocke les valeurs observées
+cbind(obs,xmp) #on les ajoute dans xmp
+apply(xmp,2, function(x) sqrt(sum((x-obs)^2)/4)/sd(xm.source)) #calcul des RMSE
+
+```
+
+On calcule le RMSE pour déterminer lequel des 3 modèles fait la prévision de meilleure qualité
+
+
+### Question 8 - refaire tout pour autres données
+à faire pour semaine pro
