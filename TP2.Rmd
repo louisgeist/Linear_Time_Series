@@ -1,0 +1,113 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# TP2 de de séries temporelles linéaires
+
+```{r}
+rm(list = ls())
+library(zoo) #format de serie temporelle pratique et facile d'utilisation (mais plus volumineux)
+library("ggplot2")
+library("tseries")
+```
+
+### Question 1 - importation des données
+```{r}
+source = read.csv(file = "./Donnees/Donnees_TP2.csv", sep =";")
+```
+
+### Question 2 - première représentation graphique
+```{r}
+index = c(1:254)
+source = as.data.frame(cbind(source,index)) # La correction fait une chose équivalente de manière plus élégante.
+
+
+p_spread = ggplot(data = source) + geom_line(aes(x = source$index,y=source$spread))
+p_spread
+
+
+```
+Cela évoque une marche aléatoire.
+
+```{r}
+dspread = diff(source$spread)
+index = 2:254
+
+df_diff = cbind.data.frame(index,dspread)
+ggplot(data=df_diff)+geom_line(aes(x=index,y=dspread))
+```
+Cela évoque une série stationnaire.
+Cela ressemble à un bruit blanc, parce qu'on ne peut rien utiliser du passé pour prévoir la valeur suivante.
+
+### Question 3
+```{r}
+summary(lm(source$spread ~ source$index))
+```
+ 
+ Le coefficient de index est bien négatif et statistiquement significatif. Donc on va être dans le cas des tests de racine unitaire avec constante et tendance non nulle.
+ 
+ D'où le test de Dicket-Fuller qui va être utilisé (et non Philipps-Perron comme dans le TP1).
+ 
+```{r}
+#library("fUnitRoots")
+
+Qtests <- function(series, k, fitdf=0) {
+  pvals <- apply(matrix(1:k), 1, FUN=function(l) {
+    pval <- if (l<=fitdf) NA else Box.test(series, lag=l, type="Ljung-Box", fitdf=fitdf)$p.value
+    return(c("lag"=l,"pval"=pval))
+  })
+  return(t(pvals))
+}
+
+adf <- adfTest(source$spread, lag=0, type="ct") #
+adf
+
+str(adf)
+Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))
+```
+
+Il faut changer les paramètres du modèle, pcq les résidus sont autocorrélés au seul de 5% jusqu'à un lag de 13. Le test ADF n'est valide que s'il y a absence d'autocorrélations des résidus.
+
+```{r}
+series <- source$spread; kmax <- 24; adftype="ct"
+
+adfTest_valid <- function(series, kmax, adftype){
+  k <- 0
+  noautocorr <- 0
+  while (noautocorr==0){
+    cat(paste0("ADF with ",k," lags: residuals OK? "))
+    adf <- adfTest(series, lags=k, type=adftype)
+    pvals <- Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))[,2]
+    if (sum(pvals<0.05,na.rm=T)==0) {
+      noautocorr <- 1; cat("OK \n")
+    } else cat("nope \n")
+    k <- k+1
+  }
+  return(adf)
+}
+adf <- adfTest_valid(series,24,adftype="ct")
+#
+Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))
+#
+adf
+#
+summary(lm(dspread ~ source$dates[-1]))
+#
+adf <- adfTest_valid(dspread,24,"nc")
+#
+Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))
+adf
+```
+
+**Test ADF** :
+$H_0$ : présence de racine unitaire (donc série pas stationnaire)
+$H_1$ : absence de racine unitaire
+
+On ne rejette pas $H_0$ pour la série en nieau donc la série est I(1) (*présence de racine unitaire*).
+
+
+On régresse la série en 1st diff sur les dates. 
+Ni la constante, ni la tendance ne sont significaitfs donc on fait test adf sans constante ni tendance.
+
+La série en niveau est bien I(1).
+
