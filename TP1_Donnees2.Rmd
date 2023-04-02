@@ -1,0 +1,195 @@
+---
+title: "R Notebook - Linear Time Series TP1 - Deuxième jeu de données"
+output: html_notebook
+---
+```{r}
+rm(list = ls())
+library("ggplot2")
+library("zoo")
+```
+
+
+### Question 1
+
+```{r}
+donnees2 = read.csv(file = "./Donnees/Donnees2.csv" )
+
+xm_source = zoo(donnees2)
+
+n = length(donnees2$XM) - 4
+xm = zoo(xm_source[1:n])
+```
+
+### Question 2
+```{r}
+#plot(xm_source) # graphique basique
+
+# Graphique mieux avec ggplot2
+index = 1:n
+df_display = as.data.frame(cbind(index, xm))
+p = ggplot(data = df_display)+geom_line(aes(x = index, y=xm))
+p
+```
+On observe une tendance déterministe.
+Pour rendre la série stationnaire, faisons alors une première différentiation.
+
+```{r}
+dxm = diff(xm)
+plot(dxm)
+```
+La série semble stationnaire mais n'est pas centrée. Faisont une seconde différentiation pour résoudre ce problème.
+
+```{r}
+ddxm = diff(dxm)
+plot(ddxm)
+
+mean(dxm)
+mean(ddxm)
+```
+La séries semble maintenant stationnaire et centrée. Dès lors, on peut essayer d'ajuster un modèle ARMA sur cette transformation de la série originelle.
+
+### Question 3 - auto-corrélogramme
+```{r}
+acf(xm)
+acf(dxm)
+acf(ddxm)
+```
+
+Le premier ACF témoigne clairement d'une série temporelle non stationnaire ou non centrée. En l'occurence, 
+
+Le ACF de ddxm est rassurant : la décroissance des autocorrélations semble exponentielle et donc cela laisse penser à une série centrée stationnaire.
+
+```{r}
+pacf(dxm)
+```
+???
+
+### Question 4
+```{r}
+#install.packages("bootUR")
+library("bootUR")
+
+adf_dxm = adf(dxm)
+print(adf_dxm)
+
+adf_dxm$null.value
+```
+
+On rejette à tous les niveaux usuels l'existence d'une racine unité pour cette série. Cela confirme donc ce que nous observions avant.
+
+### Question 5 - ajustement d'un ARMA
+En accord avec la question 3 et l'acf et pacf sur dxm, on prend les ordres maximaux $p^*=7$ et $q=1$.
+
+On veut ajuster donc un ARIMA(7,0,1) sur dxm. (C'est-à-dire un ARMA(7,1) sur xm).
+
+```{r}
+arima701 = arima(dxm - mean(dxm), c(7,0,1))
+print(arima701)
+```
+
+```{r}
+Box.test(arima701$residuals,lag = 9, fitdf = 8,type="Ljung-Box")
+```
+
+On ne rejette pas à 10% la nullité jointe des autocorrélations jusqu'à l'ordre 9. Ainsi, le modèle semble assez riche.
+
+### Question 6
+Les sous-modèles possibles sont :
+
+- ARMA(6,1)
+- ARMA(5,1)
+- ARMA(4,1)
+- ARMA(3,1)
+- ARMA(2,1)
+- ARMA(1,1)
+- ARMA(0,1)
+
+- ARMA(7,0)
+- ARMA(6,0)
+- ARMA(5,0)
+- ARMA(4,0)
+- ARMA(3,0)
+- ARMA(2,0)
+- ARMA(1,0)
+- ARMA(0,0)
+
+
+#### Test de ARMA701 contre ARMA601
+```{r}
+p_val_t_test = function(coef,se){
+  t = coef/ se # statistique de Student
+  pval = (1-pnorm(abs(t)))*2
+  return(pval)
+}
+```
+
+```{r}
+num_coef = 7
+coef = arima701$coef[num_coef]
+se = arima701$var.coef[num_coef,num_coef]
+
+p_val_t_test(coef,se)
+```
+On ne peut donc pas rejeter (à tous les niveaux usuels) que le coefficient phi_7 de lu modèle ARMA(7,1) soit significatif.
+
+### Test de ARMA61 contre ARMA51
+```{r}
+# on veut donc tester la significativité de phi_6 dans ARMA61
+num_coef = 6
+
+model = arima(dxm-mean(dxm),c(6,0,1))
+p_val_t_test(model$coef[num_coef],model$var.coef[num_coef,num_coef])
+```
+
+On conserve donc le modèle ARMA61, le modèle n'est pas trop complexe pour l'ordre en p.
+
+### Test de ARMA61 contre ARMA60
+```{r}
+num_coef = 7
+
+model = arima(dxm-mean(dxm),c(6,0,1))
+p_val_t_test(model$coef[num_coef],model$var.coef[num_coef,num_coef])
+```
+
+On rejette donc à tous les niveaux usuels H_0, c'est-à-dire que psi_1 est nul.
+Le modèle est donc valide !
+
+### Test ARMA71 contre ARMA70
+```{r}
+num_coef = 8
+model = arima(dxm-mean(dxm),c(7,0,1))
+p_val_t_test(model$coef[num_coef],model$var.coef[num_coef,num_coef])
+```
+
+### Question 7
+Avec ce que j'ai fait, je n'ai qu'un modèle : le ARIMA601.
+
+
+```{r}
+ar6ma1 = arima(dxm-mean(dxm),c(6,0,1))
+ar7ma1 = arima(dxm-mean(dxm),c(7,0,1))
+
+models = c("ar6ma1","ar7ma1")
+
+preds = zoo(matrix(NA,ncol=2,nrow=4),order.by=tail(index(xm_source),4)) # création d'un tableau de prédictions
+colnames(preds) <- models
+dxm_p <- preds
+xmp <- preds
+
+# revoir à partir de là
+for (m in models){
+  pred1 <- mean(dxm) + zoo(predict(get(m),4)$pred) #, order.by=tail(index(xm.source),4))
+  pred2 <- as.numeric(tail(xm,4)) + pred1 
+  dxm_p[,m] <- pred1
+  xmp[,m] <- pred2
+}
+
+obs <- tail(xm_source,4) #on stocke les valeurs observées
+cbind(obs,xmp) #on les ajoute dans xmp
+apply(xmp,2, function(x) sqrt(sum((x-obs)^2)/4)/sd(xm_source)) #calcul des RMSE
+
+```
+
+Le arma61 a la plus faible RMSE, mais est-ce significatif... (Il faudrait réaliser une test de Diebolt-Mariano).
+
+
