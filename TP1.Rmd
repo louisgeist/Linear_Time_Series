@@ -219,7 +219,7 @@ xmp <- preds #
 ##
 for (m in models){
   pred1 <- mean(desaison) + zoo(predict(get(m),4)$pred, order.by=tail(index(xm.source),4))
-  pred2 <- as.numeric(tail(xm,12))[1:4] + pred1
+  pred2 <- as.numeric(tail(xm,12))[1:4] + pred1 # parce qu'on avait différencier de 12 en 12
   desaisonp[,m] <- pred1
   xmp[,m] <- pred2
 }
