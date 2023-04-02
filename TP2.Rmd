@@ -37,7 +37,7 @@ df_diff = cbind.data.frame(index,dspread)
 ggplot(data=df_diff)+geom_line(aes(x=index,y=dspread))
 ```
 Cela évoque une série stationnaire.
-Cela ressemble à un bruit blanc, parce qu'on ne peut rien utiliser du passé pour prévoir la valeur suivante.
+Cela ressemble à un bruit blanc, aussi peut-être un ARMA ou autre chose..
 
 ### Question 3
 ```{r}
