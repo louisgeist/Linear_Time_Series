@@ -21,6 +21,8 @@ xm = zoo(xm_source[1:n])
 ```
 
 ### Question 2
+Faire d'abord une régression polynomiale pour vérifier que le coefficient de la pente est significatif.
+
 ```{r}
 #plot(xm_source) # graphique basique
 
@@ -162,6 +164,8 @@ p_val_t_test(model$coef[num_coef],model$var.coef[num_coef,num_coef])
 ```
 
 ### Question 7
+Correction : ar2ma1 qui est le bon
+
 Avec ce que j'ai fait, je n'ai qu'un modèle : le ARIMA601.
 
 
@@ -191,5 +195,30 @@ apply(xmp,2, function(x) sqrt(sum((x-obs)^2)/4)/sd(xm_source)) #calcul des RMSE
 ```
 
 Le arma61 a la plus faible RMSE, mais est-ce significatif... (Il faudrait réaliser une test de Diebolt-Mariano).
+
+```{r}
+# question 5 du projet
+#install.packages("polynom")
+library("polynom")
+
+ar2ma1 = arima(dxm-mean(dxm),c(2,0,1))
+print(ar2ma1)
+
+
+model = ar2ma1
+phi = polynomial(c(1,-model$coef[1:(model$arma[1])]))
+racines = polyroot(phi)
+
+print(Mod(racines))
+
+print(phi)
+
+#votre_pol = polynomial()
+#racines = solve()
+#mod(racines)
+polyroot(c(1,-1.22,0.25))
+
+```
+
 
 
