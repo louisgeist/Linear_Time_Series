@@ -8,3 +8,8 @@
 	- prendre les coefs estimés de l'ARMA (ou AR)
 	- créer un polynôme, trouver les racines
 	- pour montrer qu'un ARMA est causal
+
+
+Pour la question 4/5 :  (regarder slide 7 du chapitre 3) ou note Definition ARIMA
+d est un entier positif ou nul, une série $(X_t)$ est un ARIMA(p,d,q),
+Si la série Y_t = (1-B)^d*X_t est un ARMA(p,q) causal.
