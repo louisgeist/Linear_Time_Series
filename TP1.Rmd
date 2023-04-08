@@ -10,7 +10,7 @@ output: html_notebook
 rm(list = ls())
 require(zoo) #format de serie temporelle pratique et facile d'utilisation (mais plus volumineux)
 library("ggplot2")
-library("tseries") # contient plus d e
+library("tseries") # contient plus des fonctions pour séries temporelles
 ```
 
 ### Question 1 - importatation des données
