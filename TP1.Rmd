@@ -10,7 +10,7 @@ output: html_notebook
 rm(list = ls())
 require(zoo) #format de serie temporelle pratique et facile d'utilisation (mais plus volumineux)
 library("ggplot2")
-library("tseries")
+library("tseries") # contient plus d e
 ```
 
 ### Question 1 - importatation des données
@@ -57,9 +57,9 @@ pp.test(desaison)
 ```
 *Test de Unit Root de Philips-Perront.*
 
-On rejette de l'hypothèse nulle à 1%, qui étéit l'hypothèse de non-stationnarité.
+On rejette de l'hypothèse nulle à 1%, qui était l'hypothèse de non-stationnarité.
 
-Le test confirme donc bien les conclusions précédentes.
+Le test confirme donc bien les conclusions précédentes, la série est stationnaire.
 
 ### Question 5
 
