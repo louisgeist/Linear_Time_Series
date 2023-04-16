@@ -2,6 +2,7 @@
 title: "R Notebook"
 output: html_notebook
 ---
+
 # TP2 de de séries temporelles linéaires
 
 ```{r}
@@ -12,11 +13,13 @@ library("tseries")
 ```
 
 ### Question 1 - importation des données
+
 ```{r}
 source = read.csv(file = "./Donnees/Donnees_TP2.csv", sep =";")
 ```
 
 ### Question 2 - première représentation graphique
+
 ```{r}
 index = c(1:254)
 source = as.data.frame(cbind(source,index)) # La correction fait une chose équivalente de manière plus élégante.
@@ -27,6 +30,7 @@ p_spread
 
 
 ```
+
 Cela évoque une marche aléatoire.
 
 ```{r}
@@ -36,18 +40,23 @@ index = 2:254
 df_diff = cbind.data.frame(index,dspread)
 ggplot(data=df_diff)+geom_line(aes(x=index,y=dspread))
 ```
-Cela évoque une série stationnaire.
-Cela ressemble à un bruit blanc, aussi peut-être un ARMA ou autre chose..
+
+La série brute semble être persistante et avoir une tendance linéaire, voire non déterministe : elle évoque une marché aléatoire.
+
+Cependant, sa transformation *first difference* a évoque une série stationnaire. Cela ressemble à un bruit blanc, aussi peut-être un ARMA ou autre chose..
+
+Ainsi, la série du spread est probablement $I(1)$.
 
 ### Question 3
+
 ```{r}
 summary(lm(source$spread ~ source$index))
 ```
- 
- Le coefficient de index est bien négatif et statistiquement significatif. Donc on va être dans le cas des tests de racine unitaire avec constante et tendance non nulle.
- 
- D'où le test de Dicket-Fuller qui va être utilisé (et non Philipps-Perron comme dans le TP1).
- 
+
+Le coefficient de index est bien négatif et peut-être statistiquement significatif *(on ne peut pas vraiment le confirmer, car le test n'est pas valide en présence de résidus autocorrélés)*. Donc on va être dans le cas des tests de racine unitaire avec constante et tendance non nulles.
+
+D'où le test de Dicket-Fuller qui va être utilisé (et non Philipps-Perron comme dans le TP1).
+
 ```{r}
 #library("fUnitRoots")
 
@@ -59,16 +68,18 @@ Qtests <- function(series, k, fitdf=0) {
   return(t(pvals))
 }
 
-adf <- adfTest(source$spread, lag=0, type="ct") #
-adf
+adf <- fUnitRoots::adfTest(source$spread, lag=0, type="ct") #
+# adf
 
-str(adf)
 Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))
 ```
 
-Il faut changer les paramètres du modèle, pcq les résidus sont autocorrélés au seul de 5% jusqu'à un lag de 13. Le test ADF n'est valide que s'il y a absence d'autocorrélations des résidus.
+Il faut changer les paramètres du modèle, pcq les résidus sont autocorrélés au seuil de 5% jusqu'à un lag de 13. Le test ADF n'est valide que s'il y a absence d'autocorrélations des résidus. On ne peut donc pas encore interpréter le résultat du test ADF.
+
+Déterminons le nombre de retard de $\Delta X_t$ nécessaires pour que les résidus ne soient plus autocorrélés.
 
 ```{r}
+library(fUnitRoots)
 series <- source$spread; kmax <- 24; adftype="ct"
 
 adfTest_valid <- function(series, kmax, adftype){
@@ -80,7 +91,7 @@ adfTest_valid <- function(series, kmax, adftype){
     pvals <- Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))[,2]
     if (sum(pvals<0.05,na.rm=T)==0) {
       noautocorr <- 1; cat("OK \n")
-    } else cat("nope \n")
+    } else cat("No \n")
     k <- k+1
   }
   return(adf)
@@ -99,15 +110,14 @@ Qtests(adf@test$lm$residuals, 24, fitdf = length(adf@test$lm$coefficients))
 adf
 ```
 
-**Test ADF** :
-$H_0$ : présence de racine unitaire (donc série pas stationnaire)
-$H_1$ : absence de racine unitaire
+Les tests réalisés indiquent qu'on a besoin de 13 retards pour supprimer l'autocorrélation des résidus.
 
-On ne rejette pas $H_0$ pour la série en nieau donc la série est I(1) (*présence de racine unitaire*).
+On effectue donc le test ADF avec 13 retards.
 
+```{r}
+fUnitRoots::adfTest(source$spread,lag = 13, type="ct")
+```
 
-On régresse la série en 1st diff sur les dates. 
-Ni la constante, ni la tendance ne sont significaitfs donc on fait test adf sans constante ni tendance.
+L'hypothèse de racine unitaire n'est pas rejetée au seul de $5\%$ pour la série en niveau, la série est donc au moins $I(1)$.
 
-La série en niveau est bien I(1).
-
+On travaille donc maintenant sur la série différenciée.
