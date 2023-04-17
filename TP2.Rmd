@@ -120,4 +120,132 @@ fUnitRoots::adfTest(source$spread,lag = 13, type="ct")
 
 L'hypothèse de racine unitaire n'est pas rejetée au seul de $5\%$ pour la série en niveau, la série est donc au moins $I(1)$.
 
-On travaille donc maintenant sur la série différenciée.
+On travaille donc maintenant sur la série différenciée. Pour vérifier l'absence de constante et de tendance déterministe, on fait une régression et on regarde la significativité statistique des coefficients :
+
+```{r}
+reg = lm(df_diff$dspread ~ df_diff$index)
+
+summary(reg)
+```
+
+On ne rejette pas au seuil de 10% que la constante et la tendance soient non nulles.
+
+```{r}
+adf_dspread = fUnitRoots::adfTest(df_diff$dspread, lag=0, type="nc") 
+
+# Avant d'interpréter la p-valeur, il faut vérifier l'absence d'autocorrélations des résidus
+
+Qtests(adf_dspread@test$lm$residuals, 24, fitdf = length(adf_dspread@test$lm$coefficients))
+
+print("Fin du Qtest\n")
+
+adf_dspread@test
+```
+
+On ne rejette pas au seuil de 5% l'absence d'autocorrélation des résidus. Le test ADF est donc valide. Or la p-valeur associée au test ADF est 0.01.
+
+On rejette donc à 1% l'hypothèse de racine unitaire.
+
+Autrement dit, on considère la série dspread comme stationnaire. Et la série initiale est donc $I(1)$.
+
+### Question 4 - Estimation des ordres
+
+```{r}
+acf(dspread)
+pacf(dspread)
+```
+
+L'ACF et la PACF sont significatifs à l'ordre 3 au maximum. On choisit donc : $q^*=3$ et $p^*=3$.
+
+### Question 5 - Critères d'information
+
+```{r}
+library(tidyr)
+
+p_max = 3
+q_max = 3
+
+# Le but est de construire pour chaque critère d'information, une matrice dont l'élement (p,q) (indexation commence à 0) correspond au AIC ou BIC du modèle ARMA(p,q) de dpsread
+
+res_AIC = matrix(NA, nrow = (p_max + 1), ncol = (q_max +1))
+rownames(res_AIC) <- paste0("p=",0:p_max)
+colnames(res_AIC) <- paste0("q=",0:q_max)
+
+res_BIC = res_AIC
+
+# Double boucle pas trop couteuse pour remplir les deux matrices
+for(p in 0:(p_max)){
+  for(q in (0:q_max)){
+    model = arima(x = df_diff$dspread,order = c(p,0,q),include.mean = F)
+    res_AIC[p+1,q+1] = AIC(model)
+    res_BIC[p+1,q+1] = BIC(model)
+  }
+}
+print("Résultats des AIC : ")
+res_AIC == min(res_AIC)
+
+print("Résultats des BIC : ")
+res_BIC == min(res_BIC)
+```
+
+AIC donne pour dspread : ARMA(3,0), cad AR(3)
+
+BIC donne pour dspread : ARMA(0,1), cad MA(1)
+
+On garde donc ces deux modèles.
+
+### Question 6 : détermination des estimations des paramètres
+
+```{r}
+arima310 = arima(x = df_diff$dspread, order = c(3,0,0),include.mean = F)
+arima011 = arima(x = df_diff$dspread, order = c(0,0,1),include.mean = F)
+
+print("Statistique de Student associée au coefficient AR3 du ARIMA(3,1,0): ")
+n_coef = 3
+print(abs(arima310$coef[n_coef])/arima310[["var.coef"]][n_coef,n_coef]**(1/2))
+
+print("Statistique de Student associée au coefficient MA1 du ARIMA(0,1,1): ")
+n_coef = 1
+print(abs(arima011$coef[n_coef])/arima310[["var.coef"]][n_coef,n_coef]**(1/2))
+```
+
+Les deux statistiques sont plus grandes que 1.96, on refuse donc $H_0$. Ainsi, les coefficients maximum pour chaque modèle sont statistiquement significatifs au seuil de $5\%$. On ne peut donc pas simplifier les modèles, les modèles sont bien **ajustés**.
+
+### Question 7 : Test d'auto-corrélation des résidus
+
+```{r}
+Qtests(arima310$residuals, 24, fitdf = 3)
+Qtests(arima011$residuals, 24, fitdf = 1)
+```
+
+On ne rejette pas au seuil de 5% l'absence d'auto-corrélation des résidus dans les deux cas.
+
+Les deux modèles sont donc **valides**.
+
+### Question 8 
+
+Les deux modèles sont tous les deux bien ajustés et valides, et minimisent tous les deux un critère d'information.
+
+On conserve dans les deux modèles à ce stade.
+
+### Question 9 : Prédiction
+
+Faisons les prédictions avec le modèle ARIMA(3,1,0), car on ne rejette pas à 10% l'absence d'auto-corrélation des résidus, alors qu'on le rejette pour l'autre modèle.
+
+\*La correction propose d'utiliser le $R^2$ ajusté pour choisir le modèle utilisé. Le modèle ARIMA(3,1,0) est aussi conservé.\*
+
+```{r}
+plot(arima310$residuals)
+```
+
+On constate une valeur extrême/outlier pour la date d'indice 180 environ.
+
+On aurait pu prendre en compte cette observation en incluant une indicatrice de cette date dans la regression.
+
+### Question 10 : test de stabilité
+
+On veut vérifier qu'on a un unique modèle sur toute la série.
+
+La représentation de la série non différenciée semblait indiquer une décroissance jusqu'à l'indice 100 environ, et une croissance ensuite.
+
+\*Correction\* : On peut donc régresser séparément les deux échantillons et voir si on obtient les mêmes modèles ARIMA (voir même les mêmes coefficients, avec un test d'égalité des coefficients).
