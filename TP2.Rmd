@@ -222,13 +222,13 @@ On ne rejette pas au seuil de 5% l'absence d'auto-corrélation des résidus dans
 
 Les deux modèles sont donc **valides**.
 
-### Question 8 
+### Question 8
 
 Les deux modèles sont tous les deux bien ajustés et valides, et minimisent tous les deux un critère d'information.
 
 On conserve dans les deux modèles à ce stade.
 
-### Question 9 : Prédiction
+### Question 9 : discussion sur un outlier
 
 Faisons les prédictions avec le modèle ARIMA(3,1,0), car on ne rejette pas à 10% l'absence d'auto-corrélation des résidus, alors qu'on le rejette pour l'autre modèle.
 
