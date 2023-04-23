@@ -10,6 +10,7 @@ library("dplyr")
 library("fUnitRoots")
 # library("tseries")
 
+
 # Préparation des données
 source = read.csv(file = "valeurs_mensuelles_industrie_alimentaire.csv", sep=";", dec = ".")
 source2 = source[4:length(source$Libellé),1:2]
@@ -20,7 +21,7 @@ source2$Indice = as.numeric(source2$Indice)
 source2 = source2[-1] # on supprime la variable "date" qui n'est pas numérique
 source2 = cbind(Date_num,source2)
 colnames(source2)=c("Date","Indice")
-source2 = dplyr::filter(source2,source2$Date<2020) #on arrête la série avant le Covid
+source2 = dplyr::filter(source2,source2$Date<2022) #on arrête la série avant le Covid
 
 
 ### 2. Transformation de la série pour la rendre stationnaire
@@ -94,17 +95,110 @@ ggsave("Serie_differenciee.png",path="./Images_pour_rapport",width = 10, height 
 
 
 #---------------- Partie II : Modèles ARMA ------------------
+statio_series = source3$d_Indice
 # 4. Choix du modèle ARMA
-acf(data$FD_indice)
-pacf(data$FD_indice)
 
+acf(statio_series)
 # ACF => q = 1
+
+pacf(statio_series)
 # PACF => p = 7
 
-# On choisit donc un modèle ARMA(7,1) pour la série de l'indice différencié une fois.
+q_max = 1
+p_max = 7
 
-# "Estimer les paramètres du modèle et vérifier s'il est valide.
 
+arima701 = arima(statio_series,c(1,0,1),include.mean = F)
+p_vals701 = Qtests(arima701$residuals,24,fitdf = length(arima701$coef))
+p_vals701
+# On choisit donc un modèle ARMA(7,1) pour la série de l'indice différenciée une fois.
+
+# On veut tester l'ajustement de tous les sous-modèles de l'ARIMA(7,0,1).
+modele = arima701
+
+
+#test_ajustement : #renvoie un tableau de Booléens, qui indique quel modèle est correctement ajusté, 
+#c'est-à-dire les modèles tels que les coefficients d'ordre p et q soient tous les deux significatifs au seuil de 5% (test de Student)
+
+test_ajustement = function(statio_series, p_max, q_max){ 
+  res = matrix(NA, nrow = (p_max+1), ncol = (q_max+1))
+  rownames(res) <- paste0("p=",0:p_max)
+  colnames(res) <- paste0("q=",0:q_max)
+  
+  for(p in 0:(p_max)){
+    for(q in 0:(q_max)){
+      model = arima(x = statio_series,order = c(p,0,q),include.mean = F)
+      p_vals = 2*(1-pnorm(abs(model$coef)/diag(model[["var.coef"]])**(1/2))) #test de Student
+      
+      if(p==0 | q==0){
+        if(p!=0 | q!=0){ # on laisse p=0, q=0 en NA.. 
+          if(p==0){ # si p ou q est nul, alors on ne peut évidemment que tester la significativité de l'autre coefficient
+            if(p_vals[q]<0.05){
+              res[1,q+1]=TRUE
+            }
+            else{
+              res[1,q+1]=FALSE
+            }
+          }
+          if(q==0){
+            if(p_vals[p]<0.05){
+              res[p+1,1]=TRUE
+            }
+            else{
+              res[p+1,1]=FALSE
+            }
+          }
+        }
+      }
+      else{
+        if(p_vals[p]<0.05 & p_vals[p+q]<0.05){
+          res[p+1,q+1] = TRUE
+        }
+        else {res[p+1,q+1] = FALSE}
+      }
+    }
+  }
+ return(res)
+}
+
+tab_ajustement = test_ajustement(statio_series,p_max,q_max)
+print("Liste des modèles correctement ajustés : ")
+print(tab_ajustement)
+
+
+
+modele_valide = function (series, tab_ajustement, p_max,q_max){
+  validation_matrix = tab_ajustement
+  
+  
+  for(p in 0:(p_max)){
+    for(q in 0:(q_max)){
+      if (is.na(tab_ajustement[p+1,q+1])==FALSE){
+        
+      
+      if (tab_ajustement[p+1,q+1]==TRUE) {# on regarde la valité des modèles qui sont bien ajustés
+        model = arima(x = statio_series, order = c(p,0,q), include.mean = F)
+        tab_p_val_autocorr = Qtests(model$residuals, 24, fitdf = p+q)
+        
+        non_rejet = c((tab_p_val_autocorr[,2]> 0.05) | is.na(tab_p_val_autocorr[,2]))
+        
+        if(sum(non_rejet)!=24){ #test si tous les tests de Ljung-Box sont soit non rejetés, soit n'ont pas été réalisés car le lag était trop faible pour interprétation 
+          validation_matrix[p+1,q+1] = FALSE
+        }
+        # sinon, on laisse TRUE dans le tableau validation_matrix
+      }
+      }
+    }
+  }
+  return(validation_matrix)
+}
+
+tab_valide = modele_valide(statio_series,tab_ajustement,p_max,q_max)
+print("Parmi les modèles ajustés, voici le tableau des modèles valides (c'est-à-dire tels que leurs résidus ne sont pas autocorrélés)")
+print(tab_valide)
+
+
+# Conclusion : on garde seulement les modèles ARIMA(7,0,0) et ARIMA(0,0,1)
 
 
 # 5. Modélisation ARIMA
