@@ -21,7 +21,6 @@ source2$Indice = as.numeric(source2$Indice)
 source2 = source2[-1] # on supprime la variable "date" qui n'est pas numérique
 source2 = cbind(Date_num,source2)
 colnames(source2)=c("Date","Indice")
-source2 = dplyr::filter(source2,source2$Date<2022) #on arrête la série avant le Covid
 
 
 ### 2. Transformation de la série pour la rendre stationnaire
@@ -108,15 +107,6 @@ q_max = 1
 p_max = 7
 
 
-arima701 = arima(statio_series,c(1,0,1),include.mean = F)
-p_vals701 = Qtests(arima701$residuals,24,fitdf = length(arima701$coef))
-p_vals701
-# On choisit donc un modèle ARMA(7,1) pour la série de l'indice différenciée une fois.
-
-# On veut tester l'ajustement de tous les sous-modèles de l'ARIMA(7,0,1).
-modele = arima701
-
-
 #test_ajustement : #renvoie un tableau de Booléens, qui indique quel modèle est correctement ajusté, 
 #c'est-à-dire les modèles tels que les coefficients d'ordre p et q soient tous les deux significatifs au seuil de 5% (test de Student)
 
@@ -127,7 +117,7 @@ test_ajustement = function(statio_series, p_max, q_max){
   
   for(p in 0:(p_max)){
     for(q in 0:(q_max)){
-      model = arima(x = statio_series,order = c(p,0,q),include.mean = F)
+      model = arima(x = statio_series,order = c(p,0,q),include.mean = FALSE)
       p_vals = 2*(1-pnorm(abs(model$coef)/diag(model[["var.coef"]])**(1/2))) #test de Student
       
       if(p==0 | q==0){
@@ -161,11 +151,9 @@ test_ajustement = function(statio_series, p_max, q_max){
  return(res)
 }
 
-tab_ajustement = test_ajustement(statio_series,p_max,q_max)
+tab_ajustement = test_ajustement(statio_series, p_max, q_max)
 print("Liste des modèles correctement ajustés : ")
 print(tab_ajustement)
-
-
 
 modele_valide = function (series, tab_ajustement, p_max,q_max){
   validation_matrix = tab_ajustement
@@ -177,7 +165,7 @@ modele_valide = function (series, tab_ajustement, p_max,q_max){
         
       
       if (tab_ajustement[p+1,q+1]==TRUE) {# on regarde la valité des modèles qui sont bien ajustés
-        model = arima(x = statio_series, order = c(p,0,q), include.mean = F)
+        model = arima(x = statio_series, order = c(p,0,q), include.mean = FALSE)
         tab_p_val_autocorr = Qtests(model$residuals, 24, fitdf = p+q)
         
         non_rejet = c((tab_p_val_autocorr[,2]> 0.05) | is.na(tab_p_val_autocorr[,2]))
@@ -197,9 +185,19 @@ tab_valide = modele_valide(statio_series,tab_ajustement,p_max,q_max)
 print("Parmi les modèles ajustés, voici le tableau des modèles valides (c'est-à-dire tels que leurs résidus ne sont pas autocorrélés)")
 print(tab_valide)
 
+# On garde seulement les modèles ARIMA(7,0,0) et ARIMA(1,0,1) pour la série différenciée à l'ordre 1
 
-# Conclusion : on garde seulement les modèles ARIMA(7,0,0) et ARIMA(0,0,1)
+arima700 = arima(x = statio_series, order = c(7,0,0), include.mean = FALSE)
+arima101 = arima(x = statio_series, order = c(1,0,1), include.mean = FALSE)
 
+print(paste0("AIC pour ARIMA(7,0,0) : ", AIC(arima700)))
+print(paste0("AIC pour ARIMA(1,0,1) : ", AIC(arima101)))
+
+print(paste0("BIC pour ARIMA(7,0,0) : ", BIC(arima700)))
+print(paste0("BIC pour ARIMA(1,0,1) : ", BIC(arima101)))
+
+
+# On conserve donc le modèle ARIMA(1,0,1), car il minimise les deux critères d'information (AIC et BIC).
 
 # 5. Modélisation ARIMA
 
@@ -226,3 +224,4 @@ polyroot(c(1,-1.22,0.25))
 
 
 #---------------- Partie III : Prévision --------------------
+
