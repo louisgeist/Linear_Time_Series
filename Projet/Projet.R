@@ -9,6 +9,7 @@ library("zoo")
 library("dplyr")
 library("fUnitRoots")
 # library("tseries")
+library("polynom") #pour la question 5 (justification ARIMA)
 
 
 # Préparation des données
@@ -196,31 +197,37 @@ print(paste0("AIC pour ARIMA(1,0,1) : ", AIC(arima101)))
 print(paste0("BIC pour ARIMA(7,0,0) : ", BIC(arima700)))
 print(paste0("BIC pour ARIMA(1,0,1) : ", BIC(arima101)))
 
-
 # On conserve donc le modèle ARIMA(1,0,1), car il minimise les deux critères d'information (AIC et BIC).
 
 # 5. Modélisation ARIMA
 
-# Ce qui suit provient du TP1_Données2 corrigé par Saurel et c'est ce qui est attendu de nou
-#install.packages("polynom")
-library("polynom")
+# Il s'agit de montrer que le modèle ARMA(1,1) qu'on a pour la série différenciée est bien causal.
+# Or un ARMA est causal ssi pas de racine dans le disque unité du polynôme phi
 
-ar2ma1 = arima(dxm-mean(dxm),c(2,0,1))
-print(ar2ma1)
+arma_causal = function(model){
+  if(model$arma[1]==0){# gère le cas trivial d'un modèle MA
+    return(TRUE)
+  }
+  else{
+    phi = polynomial(c(1,-model$coef[1:(model$arma[1])]))
+    racines = polyroot(phi) #les coefficients polynomiaux sont donnés dans l'ordre CROISSANT
+    
+    for(i in 1:length(racines)){
+      if (abs(racines[i])<=1) {
+        return(FALSE)
+      }
+    }
+    return(TRUE) #si toutes les racines sont de module strictement supérieur à 1, alors ARMA causal
+  }
+}
 
+arma_causal(arima101) # renvoie TRUE
 
-model = ar2ma1
-phi = polynomial(c(1,-model$coef[1:(model$arma[1])]))
-racines = polyroot(phi)
+# Remarque : dans ce cas précis, où le polynôme est de degré 1, il était clair que la racine est en dehors
+# du disque unité, mais l'écriture de cette fonction avait pour but d'écrire une routine généralisable
 
-print(Mod(racines))
-
-print(phi)
-
-#votre_pol = polynomial()
-#racines = solve()
-#mod(racines)
-polyroot(c(1,-1.22,0.25))
+# Le modèle ARMA pour la série différenciée est causal.
+# Donc, par définition d'un ARIMA, la série non transformée suit un modèle ARIMA(1,1,1).
 
 
 #---------------- Partie III : Prévision --------------------
