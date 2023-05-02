@@ -23,6 +23,9 @@ source2 = source2[-1] # on supprime la variable "date" qui n'est pas numérique
 source2 = cbind(Date_num,source2)
 colnames(source2)=c("Date","Indice")
 
+# On met deux valeurs de côté pour la prévision à la fin
+source_end = slice_tail(source2, n=2)
+source2 = slice(source2, 1:(length(source2$Indice)-2))
 
 ### 2. Transformation de la série pour la rendre stationnaire
 
@@ -68,6 +71,7 @@ print(paste0("La pvaleur du test ADF est : ", round(test_adf@test$p.value,digits
 d_Indice = diff(source2$Indice)
 Date = source2$Date[2:(length(d_Indice)+1)]
 source3 = as.data.frame(cbind(Date,d_Indice))
+val_a_prevoir = as.data.frame(cbind(source_end$Date,c(source_end$Indice[2]-source_end$Indice[1],source_end$Indice[1]-source2$Indice[396])))
 
 # Etape 1bis :
 summary(lm(source3$d_Indice ~ source3$Date))
@@ -99,9 +103,11 @@ statio_series = source3$d_Indice
 # 4. Choix du modèle ARMA
 
 acf(statio_series)
+dev.print(device = png, file = "./Images_pour_rapport/acf.png", width = 600)
 # ACF => q = 1
 
 pacf(statio_series)
+dev.print(device = png, file = "./Images_pour_rapport/pacf.png", width = 600)
 # PACF => p = 7
 
 q_max = 1
@@ -231,4 +237,18 @@ arma_causal(arima101) # renvoie TRUE
 
 
 #---------------- Partie III : Prévision --------------------
+# 6. Equation de la région de confiance de niveau alpha
+phi = arima101$coef[1]
+psi = arima101$coef[2]
+sigma = 1 #A DETERMINER
 
+mat_sigma = matrix( data = c(1,phi-psi,phi-psi,1+(phi-psi)**2) *sigma, nrow=2,ncol=2)
+
+mat_sigma %*% solve(mat_sigma)
+
+diag = eigen(solve(mat_sigma))
+
+rac_inverse = (diag$vectors %*% diag(sqrt(c(diag$values)),2) %*% t(diag$vectors))
+
+verif = rac_inverse %*% rac_inverse %*% mat_sigma
+verif
