@@ -237,7 +237,7 @@ arma_causal(arima101) # renvoie TRUE
 
 
 #---------------- Partie III : Prévision --------------------
-# 6. Equation de la région de confiance de niveau alpha
+# 8. Equation de la région de confiance de niveau alpha
 phi = arima101$coef[1]
 psi = arima101$coef[2]
 sigma = 1 #A DETERMINER
@@ -252,3 +252,48 @@ rac_inverse = (diag$vectors %*% diag(sqrt(c(diag$values)),2) %*% t(diag$vectors)
 
 verif = rac_inverse %*% rac_inverse %*% mat_sigma
 verif
+
+
+X_T = c(slice_tail(source3,n=1)$d_Indice)
+epsilon_T = arima101$residuals[395]
+
+X_hat = c(phi*X_T - psi*epsilon_T,phi**2 *X_T -psi*phi*epsilon_T) # vecteur (\hat{X}_{T+1|T},\hat{X}_{T+2|T}), cad prévision en T+1 et T+2 sachant T
+
+alpha = 0.05
+
+#création de la grille d'affichage
+library(dplyr)
+N =200 # découpage
+abs = seq(-4,4,length.out = N)
+ord = seq(-4,4,length.out = N)
+
+grille = tidyr::expand_grid(x=abs,y=ord)
+
+
+# Fonction qui teste si les deux composantes de  sigma^{-1/2}(X-X_hat) sont bien dans [-1.96,1.96]
+dans_region_confiance = function(X){
+  Z = rac_inverse %*% (c(X[1],X[2])-X_hat)
+  
+  if((abs(Z[1]) < 1.96)&(abs(Z[2]) < 1.96)){
+    return(TRUE)
+  }
+  else return(FALSE)
+}
+
+# grille_avec_region = dplyr::mutate(grille, val = dans_region_confiance(c(grille$x,grille$y))) # ne fonctionne pas
+# Donc j'utilise une boucle classique :
+val = double(length(grille$x))
+
+for(index in 1:length(grille$x)){
+  mon_x = grille$x[index]
+  mon_y = grille$y[index]
+  val[index] = dans_region_confiance(c(mon_x,mon_y))
+}
+
+grille_avec_region = as.data.frame(cbind(grille,val))
+
+
+p = ggplot(data = grille_avec_region,aes(x = x,y=y,weight=val))+geom_bin2d(bins=N)+geom_point(aes(x=X_hat[1], y=X_hat[2]), colour="red")+xlab("X_T+1 sachant T")+ylab("X_T+2 sachant T")
+p
+ggsave(filename = "./Images_pour_rapport/region_confiance.png",width=5.5,height=4.5) #Sauvegarde manuel avec width = 800, pcq la ggsave fait des traits moches...
+
