@@ -292,7 +292,6 @@ for(index in 1:length(grille$x)){
 
 grille_avec_region = as.data.frame(cbind(grille,val))
 
-
 p = ggplot(data = grille_avec_region,aes(x = x,y=y,weight=val))+geom_bin2d(bins=N)+geom_point(aes(x=X_hat[1], y=X_hat[2]), colour="red")+xlab("X_T+1 sachant T")+ylab("X_T+2 sachant T")
 p
 ggsave(filename = "./Images_pour_rapport/region_confiance.png",width=5.5,height=4.5) #Sauvegarde manuel avec width = 800, pcq la ggsave fait des traits moches...
