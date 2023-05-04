@@ -240,7 +240,7 @@ arma_causal(arima101) # renvoie TRUE
 # 8. Equation de la région de confiance de niveau alpha
 phi = arima101$coef[1]
 psi = arima101$coef[2]
-sigma = 1 #A DETERMINER
+sigma = mean(arima101$residuals**2)-mean(arima101$residuals)**2 #variance du bruit blanc
 
 mat_sigma = matrix( data = c(1,phi-psi,phi-psi,1+(phi-psi)**2) *sigma, nrow=2,ncol=2)
 
@@ -264,8 +264,8 @@ alpha = 0.05
 #création de la grille d'affichage
 library(dplyr)
 N =200 # découpage
-abs = seq(-4,4,length.out = N)
-ord = seq(-4,4,length.out = N)
+abs = seq(-6,6,length.out = N)
+ord = seq(-6,6,length.out = N)
 
 grille = tidyr::expand_grid(x=abs,y=ord)
 
