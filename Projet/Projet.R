@@ -269,7 +269,7 @@ ord = seq(-6,6,length.out = N)
 
 grille = tidyr::expand_grid(x=abs,y=ord)
 
-
+### A) Région de confiance précise : deux lois normales centrées réduites
 # Fonction qui teste si les deux composantes de  sigma^{-1/2}(X-X_hat) sont bien dans [-1.96,1.96]
 dans_region_confiance = function(X){
   Z = rac_inverse %*% (c(X[1],X[2])-X_hat)
@@ -296,3 +296,25 @@ p = ggplot(data = grille_avec_region,aes(x = x,y=y,weight=val))+geom_bin2d(bins=
 p
 ggsave(filename = "./Images_pour_rapport/region_confiance.png",width=5.5,height=4.5) #Sauvegarde manuel avec width = 800, pcq la ggsave fait des traits moches...
 
+### B) Région confiance plus large : un loi khi-deux(2)
+dans_region_confiance_khi_deux = function(X){
+  Z =t(c(X[1],X[2])-X_hat) %*% rac_inverse %*% rac_inverse %*% (c(X[1],X[2])-X_hat)
+  if(Z<qchisq(0.95, df = 2)){
+    return(TRUE)
+  }
+  else return(FALSE)
+}
+
+val_B = double(length(grille$x))
+
+for(index in 1:length(grille$x)){
+  mon_x = grille$x[index]
+  mon_y = grille$y[index]
+  val_B[index] = dans_region_confiance_khi_deux(c(mon_x,mon_y))
+}
+
+grille_avec_region_B = as.data.frame(cbind(grille,val_B))
+
+p = ggplot(data = grille_avec_region_B,aes(x = x,y=y,weight=val_B))+geom_bin2d(bins=N)+geom_point(aes(x=X_hat[1], y=X_hat[2]), colour="red")+xlab("X_T+1 sachant T")+ylab("X_T+2 sachant T")
+p
+ggsave(filename = "./Images_pour_rapport/region_confiance.png",width=5.5,height=4.5) #Sauvegarde manuel avec width = 800, pcq la ggsave fait des traits moches...
